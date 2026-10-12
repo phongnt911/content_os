@@ -105,3 +105,42 @@ class ContentOSState(TypedDict):
     weekly_metrics: Dict[str, Any]
 ```
 
+---
+
+## 4. MA TRẬN 16 AGENT & 3 HUMAN TOUCHPOINTS
+
+### Tầng 1: Lên Kế Hoạch (Planning Layer)
+- **Agent 1 (Research):** Quét tin tức, radar đối thủ, xuất ra 5 chủ đề xu hướng.
+- **Agent 2 (Plan):** Lập lịch 5-7 bài/tuần dạng brief: `{id, angle, hook_concept, target_channel}`.
+- 🔶 **HUMAN TOUCHPOINT 1 (Duyệt Plan):** Dùng `interrupt()`. Nếu user duyệt -> Chạy song song Dây chuyền Chữ và Dây chuyền Video. Nếu từ chối -> Kết thúc luồng (END).
+
+### Tầng 2: Dây chuyền Chữ (Text Pipeline)
+- **Agent 3 (Dàn ý):** Tạo outline cấu trúc: Hook (3 biến thể) - Thân bài - CTA.
+- **Agent 4 (Viết):** Chấp bút bài Facebook theo Brand Voice Guidelines.
+- **Agent 5 (Duyệt bài - QA):** Chấm điểm bài viết:
+  - **Điều kiện:** Nếu `draft_score < 8` VÀ `text_revision_count < 2` -> Trả về Agent 4 kèm `draft_feedback` để viết lại.
+  - **Điều kiện thoát:** Nếu `draft_score >= 8` HOẶC `text_revision_count >= 2` -> Cho phép đi tiếp sang Agent 6.
+- **Agent 6 (Kiểm chứng):** Soát lỗi chính tả, xác minh số liệu, quét từ khóa vi phạm chính sách Meta/TikTok.
+- **Agent 7 (Nhân bản Threads):** Chuyển nội dung thành chuỗi 3-5 post ngắn cho Threads.
+- **Agent 8 (Carousel):** Cắt lát thành kịch bản slide ảnh (5-7 trang).
+
+### Tầng 3: Dây chuyền Video & Ảnh (Visual Pipeline)
+- **Agent 9 (Kịch bản Video):** Xuất bảng kịch bản 30-50s (Thời gian, Visual Cue, Lời thoại/Voice prompter).
+- 🔶 **HUMAN TOUCHPOINT 2 (Quay Clip):** Dùng `interrupt()`. Dừng luồng chờ user đọc kịch bản, tự quay clip và nạp link Google Drive vào state (`raw_footage_url`).
+- **Agent 10 (Dựng Video):** Cắt khoảng lặng, sync audio, chèn subtitle tự động, chèn B-roll và SFX.
+- **Agent 11 (Duyệt Video - QA):** Kiểm tra kỹ thuật: Thời lượng < 60s, khớp phụ đề. Nếu lỗi VÀ `video_revision_count < 1` -> Render lại.
+- **Agent 12 (Ảnh Bìa):** Tạo prompt & render thumbnail tỉ lệ 3:4 và 9:16.
+- **Agent 13 (Duyệt Ảnh - QA):** Kiểm tra font chữ, vị trí safe-zone, logo và màu sắc thương hiệu.
+
+### Tầng 4: Hội tụ & Xuất bản (Publishing Layer)
+- 🔶 **HUMAN TOUCHPOINT 3 (Duyệt Bộ Nội Dung):** Dùng `interrupt()`. Gom toàn bộ Text, Threads, Video, Cover thành 1 bản xem trước (Preview Payload).
+  - Nếu User bấm Duyệt (`approved=True`) -> Đi tiếp sang Agent 14.
+  - Nếu User ghi chú sửa (`note`) VÀ `total_cycle_count <= 4` -> Định tuyến quay lại dây chuyền sửa.
+  - Nếu `total_cycle_count > 4` -> Chuyển trạng thái HALTED (Dừng khẩn cấp).
+- **Agent 14 (Đăng bài):** Bắn API xuất bản đa kênh theo lịch (Facebook, TikTok, Shorts, Threads).
+- **Agent 15 (Bình luận):** Lọc bình luận theo từ khóa CTA, tự động seeding câu hỏi và phản hồi giải đáp.
+
+### Tầng 5: Đo lường & Vòng học tuần (Analytics & Brain Updating)
+- **Agent 16 (Phân tích & Tối ưu):** Sau 7 ngày, tổng hợp chỉ số tương tác, xác định góc bài viết (Angle) chiến thắng, tự động rút ra các bài học mới và bổ sung vào `brand_rules` trong State để chu kỳ tuần sau thông minh hơn.
+
+
