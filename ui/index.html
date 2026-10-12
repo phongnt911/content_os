@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PoTa Content OS - Đội AI Agent Content Đa Kênh</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Top Bar Control -->
+    <header class="top-nav">
+        <div class="nav-left">
+            <div class="logo-box">
+                <span class="logo-icon">⚡</span>
+                <span class="logo-text">POTA <span class="accent-text">CONTENT OS</span></span>
+            </div>
+            <div class="live-rec-badge">
+                <span class="rec-dot"></span>
+                <span class="rec-text">REC AI · 16 AGENTS</span>
+            </div>
+            <div class="active-counter-badge" id="activeCounterBadge">
+                <span id="activeCount">00</span>/16 AGENT ĐANG CHẠY
+            </div>
+        </div>
+
+        <div class="nav-center">
+            <div class="topic-input-container">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="topicInput" placeholder="Nhập chủ đề trọng tâm tuần này (hoặc để trống AI tự quét radar)..." />
+                <button class="btn-primary" id="btnStartFlow" onclick="handleStartWorkflow()">
+                    <span>⚡ RA LỆNH CHẠY</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="nav-right">
+            <div class="week-badge" id="weekBadge">2026-W42</div>
+            <button class="btn-ghost" onclick="handleResetWorkflow()">🔄 Reset</button>
+        </div>
+    </header>
+
+    <!-- Main Content OS Control Board -->
+    <main class="dashboard-container">
+        <!-- Banner Title Section (Giống Video TikTok) -->
+        <section class="banner-section">
+            <div class="banner-tag">#CONTENTOS</div>
+            <h1 class="main-title">ĐỘI AI AGENT CONTENT <span class="highlight-orange">ĐA KÊNH</span></h1>
+            <p class="sub-headline">16 agent nối tiếp nhau. Con người chỉ chọn tay đúng 3 lần mỗi tuần: <strong>Duyệt plan</strong>, <strong>Quay video</strong>, <strong>Duyệt bộ nội dung</strong>.</p>
+        </section>
+
+        <!-- The 16-Agent Workflow Matrix -->
+        <div class="workflow-board-wrapper">
+            <div class="workflow-matrix-grid">
+                
+                <!-- HÀNG 1: LÊN PLAN (Planning Layer) -->
+                <div class="layer-row row-plan">
+                    <div class="row-label">
+                        <span class="tag-badge badge-blue">Chặng 1</span>
+                        <h3>Lên plan</h3>
+                        <span class="row-sub">Quét radar & lập lịch</span>
+                    </div>
+
+                    <div class="nodes-track">
+                        <!-- Node Sheet Data -->
+                        <div class="agent-node node-static" id="node-sheet">
+                            <div class="node-icon">📊</div>
+                            <div class="node-content">
+                                <span class="node-title">Google Sheet</span>
+                                <span class="node-sub">Kho brief tuần</span>
+                            </div>
+                        </div>
+                        <div class="arrow-connector">→</div>
+
+                        <!-- Agent 1: Research -->
+                        <div class="agent-node" id="node-research">
+                            <div class="node-badge">Agent 01</div>
+                            <div class="node-icon">🛰️</div>
+                            <div class="node-content">
+                                <span class="node-title">Nghiên cứu</span>
+                                <span class="node-sub">Radar xu hướng & tin tức</span>
+                            </div>
+                            <div class="node-status-indicator"></div>
+                        </div>
+                        <div class="arrow-connector">→</div>
+
+                        <!-- Agent 2: Planner -->
+                        <div class="agent-node" id="node-planner">
+                            <div class="node-badge">Agent 02</div>
+                            <div class="node-icon">🗓️</div>
+                            <div class="node-content">
+                                <span class="node-title">Plan</span>
+                                <span class="node-sub">Ma trận 5-7 bài/tuần</span>
+                            </div>
+                            <div class="node-status-indicator"></div>
+                        </div>
+                        <div class="arrow-connector">→</div>
+
+                        <!-- Kế hoạch tuần -->
+                        <div class="agent-node node-static" id="node-weekly-plan">
+                            <div class="node-icon">📋</div>
+                            <div class="node-content">
+                                <span class="node-title">Kế hoạch tuần</span>
+                                <span class="node-sub">Brief đa kênh</span>
+                            </div>
+                        </div>
+                        <div class="arrow-connector connector-touchpoint">→</div>
+
+                        <!-- Touchpoint 1: Duyệt Plan (Nổi bật màu cam) -->
+                        <div class="agent-node node-touchpoint" id="node-touchpoint-1" onclick="openTouchpoint1Modal()">
+                            <div class="tp-badge">🔶 BƯỚC CỦA BẠN</div>
+                            <div class="node-icon">✍️</div>
+                            <div class="node-content">
+                                <span class="node-title">Duyệt plan</span>
+                                <span class="node-sub">Chọn bài hoặc nhập chủ đề</span>
+                            </div>
+                            <div class="tp-action-tag">CHỜ DUYỆT</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- HÀNG 2: DÂY CHUYỀN CHỮ (Text Pipeline) -->
+                <div class="layer-row row-text">
+                    <div class="row-label">
+                        <span class="tag-badge badge-orange">Chặng 2A</span>
+                        <h3>Dây chuyền chữ</h3>
+                        <span class="row-sub">Viết sâu & tự sửa bài</span>
+                    </div>
+
+                    <div class="nodes-track">
+                        <!-- Agent 3: Dàn ý -->
+                        <div class="agent-node" id="node-outline">
+                            <div class="node-badge">Agent 03</div>
+                            <div class="node-icon">📝</div>
+                            <div class="node-content">
+                                <span class="node-title">Dàn ý</span>
+                                <span class="node-sub">3 biến thể Hook - Body - CTA</span>
+                            </div>
+                            <div class="node-status-indicator"></div>
+                        </div>
+                        <div class="arrow-connector">→</div>
+
+                        <!-- Agent 4: Viết -->
+                        <div class="agent-node" id="node-writer">
+                            <div class="node-badge">Agent 04</div>
+                            <div class="node-icon">🖋️</div>
+                            <div class="node-content">
+                                <span class="node-title">Viết</span>
+                                <span class="node-sub">Chuẩn Brand Voice PoTa</span>
+                            </div>
+                            <div class="node-status-indicator"></div>
+                        </div>
+                        <div class="arrow-connector">→</div>
+
+                        <!-- Agent 5: Duyệt bài QA & Self-Correction -->
+                        <div class="agent-node node-qa" id="node-review-text">
+                            <div class="node-badge">Agent 05 (QA)</div>
+                            <div class="node-icon">🔍</div>
+                            <div class="node-content">
+                                <span class="node-title">Duyệt bài</span>
+                                <span class="node-sub">Chấm điểm & góp ý sửa</span>
+                            </div>
+                            <div class="loop-guard-badge">Vòng lặp sửa tối đa 2 lần</div>
+                            <div class="node-status-indicator"></div>
+                        </div>
+                        <div class="arrow-connector">→</div>
+
+                        <!-- Agent 6: Kiểm chứng -->
+                        <div class="agent-node" id="node-factcheck">
+                            <div class="node-badge">Agent 06</div>
+                            <div class="node-icon">🛡️</div>
+                            <div class="node-content">
+                                <span class="node-title">Kiểm chứng</span>
+                                <span class="node-sub">Chính tả, số liệu & chính sách</span>
+                            </div>
+                            <div class="node-status-indicator"></div>
+                        </div>
+                        <div class="arrow-connector">→</div>
+
+                        <!-- Agent 7: Nhân bản Threads -->
+                        <div class="agent-node" id="node-repurpose">
+                            <div class="node-badge">Agent 07</div>
+                            <div class="node-icon">🧵</div>
+                            <div class="node-content">
+                                <span class="node-title">Nhân bản</span>
+                                <span class="node-sub">Chuỗi Threads 3-5 post</span>
+                            </div>
+                            <div class="node-status-indicator"></div>
+                        </div>
+                        <div class="arrow-connector">→</div>
+
+                        <!-- Agent 8: Carousel -->
+                        <div class="agent-node" id="node-carousel">
+                            <div class="node-badge">Agent 08</div>
+                            <div class="node-icon">🎠</div>
+                            <div class="node-content">
+                                <span class="node-title">Carousel</span>
+                                <span class="node-sub">Kịch bản slide 5-7 trang</span>
+                            </div>
+                            <div class="node-status-indicator"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- HÀNG 3: DÂY CHUYỀN VIDEO & ẢNH (Visual Pipeline) -->
+                <div class="layer-row row-video">
+                    <div class="row-label">
+                        <span class="tag-badge badge-green">Chặng 2B</span>
+                        <h3>Dây chuyền video</h3>
+                        <span class="row-sub">Sản xuất video ngắn & cover</span>
+                    </div>
+
+                    <div class="nodes-track">
+                        <!-- Agent 9: Kịch bản video -->
+                        <div class="agent-node" id="node-script">
+                            <div class="node-badge">Agent 09</div>
+                            <div class="node-icon">🎬</div>
+                            <div class="node-content">
+                                <span class="node-title">Kịch bản video</span>
+                                <span class="node-sub">30-50s + máy nhắc chữ</span>
+                            </div>
+                            <div class="node-status-indicator"></div>
+                        </div>
+                        <div class="arrow-connector connector-touchpoint">→</div>
+
+                        <!-- Touchpoint 2: Quay clip (Nổi bật màu cam) -->
+                        <div class="agent-node node-touchpoint" id="node-touchpoint-2" onclick="openTouchpoint2Modal()">
+                            <div class="tp-badge">🔶 BƯỚC CỦA BẠN</div>
+                            <div class="node-icon">📱</div>
+                            <div class="node-content">
+                                <span class="node-title">Quay clip</span>
+                                <span class="node-sub">Nạp link Drive video thô</span>
+                            </div>
+                            <div class="tp-action-tag">CHỜ VIDEO</div>
+                        </div>
+                        <div class="arrow-connector">→</div>
+
+                        <!-- Agent 10: Dựng video -->
+                        <div class="agent-node" id="node-video-editor">
+                            <div class="node-badge">Agent 10</div>
+                            <div class="node-icon">✂️</div>
+                            <div class="node-content">
+                                <span class="node-title">Dựng video</span>
+                                <span class="node-sub">Auto-cut, sub, B-roll & SFX</span>
+                            </div>
+                            <div class="node-status-indicator"></div>
+                        </div>
+                        <div class="arrow-connector">→</div>
+
+                        <!-- Agent 11: Duyệt video QA -->
+                        <div class="agent-node node-qa" id="node-review-video">
+                            <div class="node-badge">Agent 11 (QA)</div>
+                            <div class="node-icon">⏱️</div>
+                            <div class="node-content">
+                                <span class="node-title">Duyệt video</span>
+                                <span class="node-sub">Thời lượng &lt; 60s & sub</span>
+                            </div>
+                            <div class="loop-guard-badge">Sửa tối đa 1 lần</div>
+                            <div class="node-status-indicator"></div>
+                        </div>
+                        <div class="arrow-connector">→</div>
+
+                        <!-- PoTa Studio / Media Store -->
+                        <div class="agent-node node-static" id="node-studio">
+                            <div class="node-icon">📽️</div>
+                            <div class="node-content">
+                                <span class="node-title">PoTa Studio</span>
+                                <span class="node-sub">Kho video render 9:16</span>
+                            </div>
+                        </div>
+                        <div class="arrow-connector">→</div>
+
+                        <!-- Agent 12: Ảnh bìa -->
+                        <div class="agent-node" id="node-cover">
+                            <div class="node-badge">Agent 12</div>
+                            <div class="node-icon">🎨</div>
+                            <div class="node-content">
+                                <span class="node-title">Ảnh bìa</span>
+                                <span class="node-sub">Prompt render 3:4 & 9:16</span>
+                            </div>
+                            <div class="node-status-indicator"></div>
+                        </div>
+                        <div class="arrow-connector">→</div>
+
+                        <!-- Agent 13: Duyệt ảnh QA -->
+                        <div class="agent-node node-qa" id="node-review-image">
+                            <div class="node-badge">Agent 13 (QA)</div>
+                            <div class="node-icon">🖼️</div>
+                            <div class="node-content">
+                                <span class="node-title">Duyệt ảnh</span>
+                                <span class="node-sub">Logo, font & safe-zone</span>
+                            </div>
+                            <div class="node-status-indicator"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- HÀNG 4: ĐĂNG THEO LỊCH (Publishing Layer) -->
+                <div class="layer-row row-publish">
+                    <div class="row-label">
+                        <span class="tag-badge badge-purple">Chặng 4</span>
+                        <h3>Đăng theo lịch</h3>
+                        <span class="row-sub">Đa nền tảng & seeding</span>
+                    </div>
+
+                    <div class="nodes-track">
+                        <!-- Agent 14: Đăng bài -->
+                        <div class="agent-node" id="node-publisher">
+                            <div class="node-badge">Agent 14</div>
+                            <div class="node-icon">🚀</div>
+                            <div class="node-content">
+                                <span class="node-title">Agent 14: Đăng bài</span>
+                                <span class="node-sub">Facebook · TikTok · Threads · Shorts</span>
+                            </div>
+                            <div class="platforms-pill">
+                                <span>FB</span><span>TT</span><span>TH</span><span>YT</span>
+                            </div>
+                            <div class="node-status-indicator"></div>
+                        </div>
+                        <div class="arrow-connector">→</div>
+
+                        <!-- Agent 15: Bình luận & CTA -->
+                        <div class="agent-node" id="node-community">
+                            <div class="node-badge">Agent 15</div>
+                            <div class="node-icon">💬</div>
+                            <div class="node-content">
+                                <span class="node-title">Agent 15: Bình luận</span>
+                                <span class="node-sub">Seeding & Auto-reply CTA</span>
+                            </div>
+                            <div class="node-status-indicator"></div>
+                        </div>
+                        <div class="arrow-connector">→</div>
+
+                        <!-- Sửa theo ghi chú -->
+                        <div class="agent-node node-static" id="node-note-rev">
+                            <div class="node-icon">📌</div>
+                            <div class="node-content">
+                                <span class="node-title">Sửa theo ghi chú</span>
+                                <span class="node-sub">Feedback loop</span>
+                            </div>
+                        </div>
+                        <div class="arrow-connector">→</div>
+
+                        <!-- Chờ hoặc dừng -->
+                        <div class="agent-node node-static" id="node-idle">
+                            <div class="node-icon">⏳</div>
+                            <div class="node-content">
+                                <span class="node-title">Chờ hoặc dừng</span>
+                                <span class="node-sub">Hoàn thành lượt phát</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- HÀNG 5: MỖI TUẦN (Continuous Learning) -->
+                <div class="layer-row row-analytics">
+                    <div class="row-label">
+                        <span class="tag-badge badge-teal">Chặng 5</span>
+                        <h3>Mỗi tuần</h3>
+                        <span class="row-sub">Đo lường & Brand Brain</span>
+                    </div>
+
+                    <div class="nodes-track">
+                        <!-- Số liệu cuối tuần -->
+                        <div class="agent-node node-static" id="node-metrics-feed">
+                            <div class="node-icon">📈</div>
+                            <div class="node-content">
+                                <span class="node-title">Số liệu cuối tuần</span>
+                                <span class="node-sub">Views, Reach, CTR, Leads</span>
+                            </div>
+                        </div>
+                        <div class="arrow-connector">→</div>
+
+                        <!-- Agent 16: Phân tích -->
+                        <div class="agent-node" id="node-analytics">
+                            <div class="node-badge">Agent 16</div>
+                            <div class="node-icon">🧠</div>
+                            <div class="node-content">
+                                <span class="node-title">Phân tích</span>
+                                <span class="node-sub">Xác định Winning Angles</span>
+                            </div>
+                            <div class="node-status-indicator"></div>
+                        </div>
+                        <div class="arrow-connector">→</div>
+
+                        <!-- Bộ nhận diện thương hiệu tự cập nhật -->
+                        <div class="agent-node node-brain" id="node-brain-update">
+                            <div class="node-icon">💡</div>
+                            <div class="node-content">
+                                <span class="node-title">Brand Brain tự cập nhật</span>
+                                <span class="node-sub">Bổ sung quy tắc mới</span>
+                            </div>
+                        </div>
+                        <div class="arrow-connector">→</div>
+
+                        <!-- Tuần sau tốt hơn -->
+                        <div class="agent-node node-loop-end" id="node-continuous-growth">
+                            <div class="node-icon">🎯</div>
+                            <div class="node-content">
+                                <span class="node-title">Tuần sau tốt hơn</span>
+                                <span class="node-sub">Chu kỳ khép kín 360°</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- CỘT BÊN PHẢI: DUYỆT BỘ NỘI DUNG (Touchpoint 3 - Hội tụ cả 2 nhánh) -->
+            <div class="touchpoint-final-column">
+                <div class="touchpoint-final-card" id="node-touchpoint-3" onclick="openTouchpoint3Modal()">
+                    <div class="tp3-header">
+                        <span class="tp-badge-glow">🔶 BƯỚC CỦA BẠN</span>
+                        <div class="tp3-check-icon">✓</div>
+                    </div>
+                    <div class="tp3-body">
+                        <h2>Duyệt bộ nội dung</h2>
+                        <p class="tp3-summary">Bài viết Facebook + Threads + Carousel + Video ngắn + Ảnh cover</p>
+                        <div class="tp3-items-checklist">
+                            <div class="chk-item checked"><span class="chk-bullet">●</span> Bài viết Facebook</div>
+                            <div class="chk-item checked"><span class="chk-bullet">●</span> Chuỗi bài Threads (3-5)</div>
+                            <div class="chk-item checked"><span class="chk-bullet">●</span> Kịch bản Carousel (5-7)</div>
+                            <div class="chk-item checked"><span class="chk-bullet">●</span> Video ngắn 9:16 (Auto-sub)</div>
+                            <div class="chk-item checked"><span class="chk-bullet">●</span> Ảnh bìa Thumbnail</div>
+                        </div>
+                    </div>
+                    <div class="tp3-footer">
+                        <span class="tp3-status-tag" id="tp3StatusTag">SẴN SÀNG DUYỆT</span>
+                        <span class="tp3-cycle-tag" id="tp3CycleTag">Chu kỳ: 1/4</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Terminal & Logs Section -->
+        <section class="live-terminal-panel">
+            <div class="terminal-header">
+                <div class="terminal-dots">
+                    <span class="dot dot-red"></span>
+                    <span class="dot dot-yellow"></span>
+                    <span class="dot dot-green"></span>
+                </div>
+                <div class="terminal-title">TERMINAL LOGS & REALTIME AGENT STREAM</div>
+                <div class="terminal-actions">
+                    <button class="btn-xs" onclick="clearLogs()">Xóa log</button>
+                </div>
+            </div>
+            <div class="terminal-body" id="terminalLogs">
+                <div class="log-line log-system">[PoTa OS] Hệ thống khởi động thành công. 16 AI Agents sẵn sàng nhận lệnh.</div>
+                <div class="log-line log-info">[Hướng dẫn] Nhập chủ đề ở thanh trên cùng và bấm 'RA LỆNH CHẠY' để kích hoạt.</div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ================= MODAL TOUCHPOINT 1: DUYỆT PLAN ================= -->
+    <div class="modal-overlay" id="modalTouchpoint1">
+        <div class="modal-box modal-lg">
+            <div class="modal-header">
+                <div class="modal-badge">🔶 HUMAN TOUCHPOINT 1</div>
+                <h3>PHÊ DUYỆT MA TRẬN KẾ HOẠCH TUẦN & CHỌN CHỦ ĐỀ</h3>
+                <button class="modal-close-btn" onclick="closeModal('modalTouchpoint1')">✕</button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-desc">Agent 1 & Agent 2 đã quét radar và đề xuất các bài viết dưới đây. Vui lòng chọn bài viết bạn muốn sản xuất ngay hoặc nhập chủ đề tùy chỉnh:</p>
+                <div class="plan-cards-list" id="planCardsList">
+                    <!-- Sẽ render động các bài viết từ API -->
+                </div>
+
+                <div class="custom-topic-override">
+                    <label>Hoặc nhập chủ đề tùy chỉnh của bạn (Custom Topic):</label>
+                    <input type="text" id="customTopicInput" placeholder="Ví dụ: Hướng dẫn tích hợp LangGraph với n8n tự động hóa..." />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-danger" onclick="submitTouchpoint1(false)">✕ Từ chối kế hoạch</button>
+                <button class="btn-success" onclick="submitTouchpoint1(true)">✓ Phê duyệt & Bắt đầu Dây chuyền Chữ + Video</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MODAL TOUCHPOINT 2: QUAY VIDEO RAW ================= -->
+    <div class="modal-overlay" id="modalTouchpoint2">
+        <div class="modal-box modal-lg">
+            <div class="modal-header">
+                <div class="modal-badge">🔶 HUMAN TOUCHPOINT 2</div>
+                <h3>QUAY VIDEO RAW (CREATOR ACTION)</h3>
+                <button class="modal-close-btn" onclick="closeModal('modalTouchpoint2')">✕</button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-desc">Agent 9 đã soạn kịch bản video dọc 30-50s. Creator đọc kịch bản, quay clip và dán link Google Drive video thô bên dưới:</p>
+                
+                <div class="video-script-preview">
+                    <div class="script-meta" id="scriptMeta">Thời lượng dự tính: 45s</div>
+                    <div class="script-hook" id="scriptHook">"Dừng việc làm content thủ công lại ngay nếu không muốn kiệt sức..."</div>
+                    <div class="script-scenes-list" id="scriptScenesList">
+                        <!-- Render các phân cảnh -->
+                    </div>
+                    <div class="script-cta" id="scriptCta">"Comment WORKFLOW để nhận tài liệu miễn phí!"</div>
+                </div>
+
+                <div class="footage-input-box">
+                    <label>Link Google Drive / URL Video thô của bạn:</label>
+                    <input type="text" id="rawFootageInput" value="https://drive.google.com/file/d/creator_raw_footage_1080p/view" />
+                    <span class="input-hint">* Có thể dùng link demo mặc định để kiểm thử ngay.</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-success" onclick="submitTouchpoint2()">✓ Đã Quay Xong & Nạp Video Vào Dây Chuyền Dựng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MODAL TOUCHPOINT 3: DUYỆT TRỌN BỘ ================= -->
+    <div class="modal-overlay" id="modalTouchpoint3">
+        <div class="modal-box modal-xl">
+            <div class="modal-header">
+                <div class="modal-badge">🔶 HUMAN TOUCHPOINT 3</div>
+                <h3>DUYỆT TRỌN BỘ NỘI DUNG HOÀN CHỈNH (FINAL PACKAGE)</h3>
+                <button class="modal-close-btn" onclick="closeModal('modalTouchpoint3')">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="preview-tabs-nav">
+                    <button class="tab-btn active" onclick="switchPreviewTab('fb')">📘 Bài Facebook</button>
+                    <button class="tab-btn" onclick="switchPreviewTab('threads')">🧵 Chuỗi Threads</button>
+                    <button class="tab-btn" onclick="switchPreviewTab('carousel')">🎠 Carousel Slides</button>
+                    <button class="tab-btn" onclick="switchPreviewTab('video')">🎬 Video Render 9:16</button>
+                    <button class="tab-btn" onclick="switchPreviewTab('cover')">🎨 Ảnh Bìa Cover</button>
+                </div>
+
+                <div class="preview-tab-contents">
+                    <!-- Tab Facebook -->
+                    <div class="tab-pane active" id="pane-fb">
+                        <div class="post-preview-card" id="previewDraftText">Đang tải bản thảo bài viết Facebook...</div>
+                    </div>
+                    <!-- Tab Threads -->
+                    <div class="tab-pane" id="pane-threads">
+                        <div class="threads-preview-list" id="previewThreadsList">Đang tải chuỗi bài Threads...</div>
+                    </div>
+                    <!-- Tab Carousel -->
+                    <div class="tab-pane" id="pane-carousel">
+                        <div class="carousel-preview-slides" id="previewCarouselSlides">Đang tải slide Carousel...</div>
+                    </div>
+                    <!-- Tab Video -->
+                    <div class="tab-pane" id="pane-video">
+                        <div class="video-preview-wrapper" id="previewVideoWrapper">
+                            <div class="video-mockup">
+                                <span class="video-icon">▶</span>
+                                <p id="previewVideoUrl">Link video: Đang dựng...</p>
+                                <span class="video-duration-pill" id="previewVideoDuration">Thời lượng: 45s</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Tab Cover -->
+                    <div class="tab-pane" id="pane-cover">
+                        <div class="cover-preview-wrapper" id="previewCoverWrapper">
+                            <div class="cover-mockup">
+                                <h3 id="previewCoverHeadline">AI DỰNG VIDEO TRONG 30 GIÂY</h3>
+                                <p id="previewCoverPrompt">Prompt 3:4 & 9:16</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="revision-note-box">
+                    <label>Ghi chú chỉnh sửa (nếu cần sửa lại):</label>
+                    <input type="text" id="revisionNoteInput" placeholder="Ví dụ: Sửa lại mở bài cho tò mò hơn, hoặc thay ảnh thumbnail..." />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-warning" onclick="submitTouchpoint3(false)">↩ Yêu cầu chỉnh sửa lại</button>
+                <button class="btn-success" onclick="submitTouchpoint3(true)">🚀 Phê duyệt xuất bản đa kênh ngay!</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
