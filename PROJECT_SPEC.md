@@ -1,7 +1,7 @@
 # POTA CONTENT OS - SYSTEM ARCHITECTURE & IMPLEMENTATION SPEC
 
 ## 1. PROJECT OVERVIEW
-- **Tên dự án:** PoTa Content OS (Multi-Agent Multi-Channel Content Production & Distribution System)
+- **Tên dự án:** POTA Content OS (Multi-Agent Multi-Channel Content Production & Distribution System)
 - **Framework cốt lõi:** LangGraph (Cyclic StateGraph, MemorySaver Checkpointer, Human-in-the-loop Interrupts)
 - **Mô hình kiến trúc:** Đồ thị trạng thái có chu trình kết hợp phân nhánh song song (DAG Fork-Join).
 - **Nguyên lý cốt lõi:** 

@@ -1,7 +1,7 @@
-# 🚀 LinTech Content OS
+# 🚀 POTA Content OS
 
 > **Hệ thống Multi-Agent Tự Động Hóa Sản Xuất & Phân Phối Nội Dung Đa Kênh Khép Kín**  
-> Xây dựng trên nền tảng **LangGraph (Cyclic StateGraph + DAG Fork-Join)** với kiến trúc 16 AI Agents chuyên trách và 3 Human Touchpoints.
+> Xây dựng trên nền tảng **LangGraph 0.2+ (Cyclic StateGraph + DAG Fork-Join)** với kiến trúc 16 AI Agents chuyên trách, 3 Human Touchpoints và giao diện Web Dashboard điều khiển trực quan theo thời gian thực.
 
 ---
 
@@ -10,23 +10,29 @@
 2. [Cấu trúc ma trận 16 Agents & 3 Human Touchpoints](#-cấu-trúc-ma-trận-16-agents--3-human-touchpoints)
 3. [Hướng dẫn cài đặt trên máy mới](#-hướng-dẫn-cài-đặt-trên-máy-mới)
 4. [Hướng dẫn sử dụng](#-hướng-dẫn-sử-dụng)
+   - [Cách 1: Giao diện Web Dashboard Trực Quan](#1-chạy-giao-diện-web-dashboard-visual-ui)
+   - [Cách 2: Chạy tương tác qua Terminal (CLI)](#2-chạy-tương-tác-qua-terminal-interactive-cli)
+   - [Cách 3: Chạy tự động không dừng (Demo CI/CD)](#3-chạy-tự-động-không-dừng-demo-cicd)
 5. [Cấu trúc thư mục dự án](#-cấu-trúc-thư-mục-dự-án)
 6. [Cơ chế tự sửa bài & Loop Breakers](#-cơ-chế-tự-sửa-bài--loop-breakers)
-7. [Chạy kiểm thử tự động (Unit & Integration Tests)](#-chạy-kiểm-thử-tự-động)
+7. [Chạy kiểm thử tự động (Unit Tests)](#-chạy-kiểm-thử-tự-động)
 
 ---
 
 ## 🌟 Tổng Quan Hệ Thống
 
-LinTech Content OS giải phóng 80% thời gian sản xuất nội dung hàng tuần cho Solopreneurs và Tech Founders bằng cách:
-- Tự động quét radar tin tức và đối thủ để lên lịch ma trận 5-7 bài viết đa kênh.
-- Phân nhánh song song (**Parallel DAG Fork-Join**):
-  - **Dây chuyền Chữ (Text Pipeline):** Lập dàn ý $\to$ Viết bài $\to$ Tự chấm điểm & sửa bài $\to$ Soát lỗi & chính sách $\to$ Nhân bản Threads (3-5 posts) $\to$ Kịch bản Carousel (5-7 trang).
-  - **Dây chuyền Video & Ảnh (Visual Pipeline):** Kịch bản video dọc 30-50s $\to$ Creator quay thô $\to$ Auto-cut, ghép sub & B-roll $\to$ QA kỹ thuật $\to$ Prompt ảnh cover 3:4 & 9:16 $\to$ QA nhận diện thương hiệu.
-- Hội tụ dữ liệu để con người duyệt trọn gói (Human Touchpoint 3).
-- Bắn API xuất bản đa kênh (**Facebook, TikTok, Threads, YouTube Shorts**).
-- Tự động lên kịch bản chăm sóc bình luận, điều hướng link CTA.
-- Đo lường chỉ số tuần và **tự cập nhật bài học mới vào Brand Brain** (Continuous Learning Loop).
+**POTA Content OS** giải phóng 80% thời gian sản xuất và phân phối nội dung hàng tuần cho Solopreneurs, Content Creators và Doanh nghiệp với các khả năng vượt trội:
+
+- **Khả năng thích ứng đa ngành (Multi-Industry Semantic Intent):**
+  - Tự động nhận diện bản chất đề tài: Nông sản, đặc sản vùng miền, F&B ẩm thực, thời trang, bất động sản, tài chính cá nhân, giáo dục hay công nghệ.
+  - Sử dụng văn phong thuần Việt, đời sống, tự nhiên; **tuyệt đối không gượng ép văn mẫu startup sáo rỗng** vào các chủ đề ẩm thực, nông sản hay phong cách sống.
+- **Phân nhánh song song tự động (Parallel DAG Fork-Join):**
+  - **Dây chuyền Chữ (Text Pipeline):** Lập dàn ý $\to$ Viết bài $\to$ Tự chấm điểm & sửa bài (QA Loop $\le 2$) $\to$ Soát lỗi & chính sách $\to$ Chuỗi Threads (3-5 posts) $\to$ Kịch bản Carousel (5-7 trang).
+  - **Dây chuyền Video & Ảnh (Visual Pipeline):** Kịch bản video dọc 30-50s $\to$ Creator quay clip thô $\to$ Auto-cut, ghép sub & B-roll $\to$ QA kỹ thuật $\to$ Prompt ảnh cover 3:4 & 9:16 $\to$ QA nhận diện thương hiệu.
+- **Hội tụ dữ liệu tại Human Touchpoint 3:** Con người duyệt trọn gói toàn bộ ấn phẩm (Text + Threads + Carousel + Video + Cover) trước khi xuất bản.
+- **Tự động xuất bản đa nền tảng:** Kết nối phát hành đồng bộ lên **Facebook, TikTok, Threads, YouTube Shorts**.
+- **Chăm sóc cộng đồng & Tự học hỏi tuần:** Tự động lên kịch bản phản hồi bình luận theo từ khóa CTA và **bổ sung bài học mới vào Brand Brain** (`brand_rules`) qua cơ chế reducer `operator.add`.
+- **Giao diện điều khiển Web Dashboard:** Phong cách Cyberpunk Dark Mode với bộ đếm `REC AI · 16 AGENT` trực quan thời gian thực, font chữ **Be Vietnam Pro** hiển thị tiếng Việt hoàn hảo.
 
 ---
 
@@ -38,9 +44,10 @@ flowchart TD
     research --> plan[Agent 2: Weekly Matrix Planner]
     plan --> TP1{🔶 Touchpoint 1: Duyệt Plan Tuần}
     
-    TP1 -- "Từ chối" --> END1([END])
-    TP1 -- "Duyệt (Fork song song)" --> outline[Agent 3: Outline Hook-Body-CTA]
-    TP1 -- "Duyệt (Fork song song)" --> script[Agent 9: Video Script 30-50s]
+    TP1 -- "Từ chối / Đổi chủ đề" --> research
+    TP1 -- "Dừng luồng" --> END1([END])
+    TP1 -- "Phê duyệt (Fork song song)" --> outline[Agent 3: Outline Hook-Body-CTA]
+    TP1 -- "Phê duyệt (Fork song song)" --> script[Agent 9: Video Script 30-50s]
     
     subgraph Text_Pipeline [Dây Chuyền Chữ]
         outline --> writer[Agent 4: Brand Voice Writer]
@@ -60,12 +67,11 @@ flowchart TD
         cover --> review_img[Agent 13: Review Image QA]
     end
     
-    carousel --> join_node[Join Node: Hội Tụ 2 Nhánh]
+    carousel --> join_node[Join Node: Hội Tụ 2 Nhánh Song Song]
     review_img --> join_node
     
     join_node --> TP3{🔶 Touchpoint 3: Duyệt Trọn Gói Final Package}
-    TP3 -- "Sửa bài (Chu kỳ <= 4)" --> outline
-    TP3 -- "Sửa video (Chu kỳ <= 4)" --> script
+    TP3 -- "Yêu cầu sửa (Chu kỳ <= 4)" --> outline
     TP3 -- "Quá 4 chu kỳ" --> HALTED([HALTED / END])
     
     TP3 -- "Phê duyệt" --> publisher[Agent 14: Multi-Channel Publisher]
@@ -79,7 +85,7 @@ flowchart TD
 ## 💻 Hướng Dẫn Cài Đặt Trên Máy Mới
 
 ### 1. Yêu cầu tiên quyết
-- **Python:** 3.10 trở lên (khuyên dùng Python 3.11 hoặc 3.12, tương thích cả Python 3.15).
+- **Python:** 3.10 trở lên (khuyên dùng Python 3.11 hoặc 3.12, tương thích hoàn toàn Python 3.15).
 - **Git:** Đã cài đặt trên máy.
 
 ### 2. Tải mã nguồn (Clone repository)
@@ -89,7 +95,7 @@ cd content_os
 ```
 
 ### 3. Khởi tạo môi trường ảo (Virtual Environment)
-- **Trên Windows (PowerShell / Command Prompt):**
+- **Trên Windows (PowerShell):**
   ```powershell
   python -m venv venv
   .\venv\Scripts\activate
@@ -110,9 +116,9 @@ Tạo file `.env` tại thư mục gốc (hoặc copy từ `.env.example`):
 ```bash
 cp .env.example .env
 ```
-Mở file `.env` và điền API Key của bạn:
+Mở file `.env` và điền API Key:
 ```ini
-# Ưu tiên Google Gemini (Khuyên dùng gemini-3.5-flash-lite, tốc độ cao và miễn phí)
+# Ưu tiên Google Gemini (Khuyên dùng gemini-3.5-flash-lite tốc độ cao, miễn phí)
 GOOGLE_API_KEY=your_google_gemini_api_key_here
 
 # Hoặc OpenAI
@@ -126,34 +132,47 @@ LLM_TEMPERATURE=0.7
 # Tuần mặc định
 DEFAULT_WEEK_ID=2026-W42
 ```
-> **Lưu ý:** Hệ thống đã tích hợp sẵn cơ chế **MockLLM Fallback thông minh**. Kể cả khi chưa có API Key hoặc hết quota (429), toàn bộ luồng đồ thị và các test case vẫn tự động chạy mượt mà mà không bị crash.
+> **Cơ chế MockLLM Fallback thông minh:** Kể cả khi chưa có API Key hoặc hết quota (429), toàn bộ luồng đồ thị và các unit test vẫn tự động chạy ổn định nhờ hệ thống mock nội bộ.
 
 ---
 
 ## 🎯 Hướng Dẫn Sử Dụng
 
-### 1. Chạy tương tác qua Terminal (Interactive CLI)
+### 1. Chạy Giao Diện Web Dashboard (Visual UI)
+Khởi chạy máy chủ HTTP:
+```bash
+python server.py
+```
+👉 Mở trình duyệt truy cập: **`http://localhost:8080`**
+
+**Các tính năng nổi bật trên giao diện Web:**
+- **Đèn REC AI nhấp nháy & Bộ đếm Realtime:** Thể hiện chính xác số lượng Agent đang xử lý (`02/16 AGENT ĐANG CHẠY`).
+- **Thanh nhập chủ đề:** Cho phép nhập bất kỳ ngành nghề nào (ví dụ: *"xoài cam lâm"*, *"kinh doanh F&B"*, *"thời trang công sở"*, *"đầu tư căn hộ"*...) hoặc để trống để AI tự quét radar.
+- **Modal Touchpoint 1 (Duyệt Plan):**
+  - Hiển thị danh sách các bài viết do Gemini LLM thiết lập.
+  - Hỗ trợ đổi hướng đề tài: Nếu chưa ưng ý, bấm *"✕ Từ chối / Đổi hướng đề tài"*, hệ thống sẽ hỏi nhu cầu mới và lập lại kế hoạch theo định hướng vừa nhập.
+  - Hỗ trợ dừng luồng an toàn: Đưa bộ đếm về `00/16` và mở lại nút chạy, không bị treo.
+- **Modal Touchpoint 2 (Quay Video):** Xem kịch bản máy nhắc chữ (Voice prompter, visual cues) và nạp link Google Drive video thô.
+- **Modal Touchpoint 3 (Duyệt Trọn Gói):** Tab xem trước Bài Facebook, chuỗi bài Threads, Carousel slides, Video dựng và Ảnh bìa Thumbnail trước khi xuất bản.
+- **Terminal Logs:** Theo dõi dòng chạy dữ liệu của 16 Agents theo thời gian thực.
+
+---
+
+### 2. Chạy tương tác qua Terminal (Interactive CLI)
 ```bash
 python main.py
 ```
-Quy trình tương tác trực quan:
-1. **Khởi tạo chủ đề:** Bạn có thể nhập một chủ đề/từ khóa muốn làm trong tuần (ví dụ: *"Tự động hóa n8n và LangGraph"*), hoặc bấm **Enter** để AI tự động quét tin tức và radar đối thủ.
-2. **Touchpoint 1 (Duyệt Plan tuần):**
-   - Nhập số `1` đến `6` để chọn chính xác bài viết muốn sản xuất ngay trong tuần.
-   - Nhập `Y` để lấy bài số 1 mặc định.
-   - Nhập `C` để gõ một chủ đề tùy chỉnh mới.
-   - Nhập `N` để từ chối kế hoạch.
-3. **Touchpoint 2 (Quay Video Raw):**
-   - Đọc kịch bản 30-50s do Agent 9 soạn (Visual cues, lời thoại máy nhắc chữ).
-   - Dán URL Google Drive video thô của bạn (hoặc bấm **Enter** để dùng video mẫu demo).
-4. **Touchpoint 3 (Duyệt Trọn Gói):**
-   - Xem trước toàn bộ ấn phẩm: Bài Facebook, chuỗi bài Threads, Carousel slides, Video render, Ảnh bìa cover.
-   - Nhập `Y` để phê duyệt xuất bản ngay!
-   - Nhập `R` để yêu cầu chỉnh sửa kèm lý do.
-5. **Hoàn tất:** Hệ thống xuất bản đa kênh, hiển thị link bài đăng Facebook/TikTok/Threads/Shorts, kịch bản trả lời comment và các bài học mới được bổ sung vào Brand Brain.
+Quy trình dòng lệnh:
+1. Nhập chủ đề trọng tâm tuần (hoặc nhấn **Enter** để AI tự quét radar).
+2. **Touchpoint 1:** Chọn bài viết muốn sản xuất (`1` - `6`), duyệt nhanh (`Y`), nhập chủ đề mới (`C`), hoặc từ chối kế hoạch (`N`). Nếu từ chối, hệ thống sẽ hỏi định hướng mới để chuyển hướng sản xuất.
+3. **Touchpoint 2:** Đọc kịch bản 3 phân cảnh và dán link Google Drive video thô.
+4. **Touchpoint 3:** Xem trước toàn bộ ấn phẩm và bấm `Y` để xuất bản đa kênh.
+5. Xem báo cáo kết thúc chu trình: Link bài đăng đa kênh, số liệu đo lường và bài học mới được cập nhật vào Brand Brain.
 
-### 2. Chạy tự động không dừng (Non-interactive Demo)
-Dùng để chạy demo nhanh hoặc kiểm thử CI/CD:
+---
+
+### 3. Chạy tự động không dừng (Demo CI/CD)
+Dùng để chạy thử nghiệm nhanh toàn bộ quy trình mà không cần con người tương tác:
 ```bash
 python main.py --auto
 ```
@@ -168,15 +187,20 @@ content_os/
 ├── requirements.txt              # Danh sách thư viện Python
 ├── .env.example                  # Mẫu cấu hình API keys
 ├── .gitignore                    # Bỏ qua venv, cache, file bảo mật
-├── README.md                     # Tài liệu hướng dẫn này
+├── README.md                     # Tài liệu hướng dẫn sử dụng và cài đặt
 ├── PROJECT_SPEC.md               # Tài liệu đặc tả kỹ thuật chi tiết
+├── server.py                     # Web Dashboard Server kết nối StateGraph REST API
+├── ui/                           # Giao diện Visual Control Board thời gian thực
+│   ├── index.html                # Cyberpunk dashboard 16 Agents & 3 Modals
+│   ├── style.css                 # CSS glassmorphism & typography Be Vietnam Pro
+│   └── app.js                    # Bộ điều khiển frontend kết nối trực tiếp StateGraph
 ├── core/
 │   ├── __init__.py
 │   ├── state.py                  # ContentOSState TypedDict & Pydantic V2 Schemas
 │   └── checkpointer.py           # MemorySaver checkpointer cho LangGraph
 ├── agents/
 │   ├── planning/
-│   │   ├── research_agent.py     # Agent 1: Quét xu hướng & đối thủ
+│   │   ├── research_agent.py     # Agent 1: Quét xu hướng đa ngành & bám sát đề tài
 │   │   └── planner_agent.py      # Agent 2: Lập ma trận 5-7 bài/tuần
 │   ├── text_pipeline/
 │   │   ├── outline_agent.py      # Agent 3: Dàn ý Hook - Body - CTA
@@ -200,43 +224,43 @@ content_os/
 │   ├── nodes.py                  # Đóng gói các node trong đồ thị LangGraph
 │   ├── edges.py                  # Các hàm điều kiện rẽ nhánh & vòng lặp
 │   └── workflow.py               # Biên dịch StateGraph hoàn chỉnh
-├── tests/
-│   ├── test_state_and_planning.py    # Unit test Phase 1 (State & Planning)
-│   ├── test_phase2_graph.py          # Unit test Phase 2 (Touchpoint 1)
-│   ├── test_phase3_text_pipeline.py  # Unit test Phase 3 (Text Self-Correction)
-│   ├── test_phase4_media_pipeline.py # Unit test Phase 4 (Media & DAG Fork-Join)
-│   └── test_phase5_operations.py     # Unit test Phase 5 (Operations & End-to-End)
-└── main.py                       # CLI Runner điều khiển tương tác
+└── tests/
+    ├── test_state_and_planning.py    # Unit test Phase 1 (State & Planning)
+    ├── test_phase2_graph.py          # Unit test Phase 2 (Touchpoint 1)
+    ├── test_phase3_text_pipeline.py  # Unit test Phase 3 (Text Self-Correction)
+    ├── test_phase4_media_pipeline.py # Unit test Phase 4 (Media & DAG Fork-Join)
+    └── test_phase5_operations.py     # Unit test Phase 5 (Operations & End-to-End)
 ```
 
 ---
 
 ## 🛡️ Cơ Chế Tự Sửa Bài & Loop Breakers
 
-Hệ thống được thiết kế theo tiêu chuẩn công nghiệp với các chốt chặn an toàn:
-1. **Self-Correction Dây chuyền Chữ:** Nếu bài viết của Agent 4 đạt điểm QA < 8 điểm, hệ thống tự động quay lại Agent 4 viết lại kèm lời nhận xét chi tiết. Chốt chặn: **Tối đa 2 lần sửa** (`text_revision_count < 2`).
-2. **Video Editing Correction:** Nếu video render bị lỗi phụ đề hoặc vượt quá 60s, hệ thống yêu cầu cắt dựng lại. Chốt chặn: **Tối đa 1 lần render lại** (`video_revision_count < 1`).
-3. **Touchpoint 3 Loop Breaker:** Nếu con người yêu cầu sửa toàn bộ gói ấn phẩm, đồ thị cho phép quay lại sửa tối đa 4 lần. Nếu vượt quá 4 chu kỳ (`total_cycle_count > 4`), hệ thống tự động kích hoạt trạng thái **HALTED** để chống tràn token và lặp vô hạn.
+Hệ thống được thiết kế theo chuẩn kỹ thuật khắt khe nhằm đảm bảo độ tin cậy và kiểm soát ngân sách:
+1. **Self-Correction Dây chuyền Chữ:** Nếu bài viết của Agent 4 có điểm QA < 8 điểm, hệ thống tự động đưa feedback để viết lại. Chốt chặn: **Tối đa 2 lần sửa** (`text_revision_count < 2`).
+2. **Video Editing Correction:** Nếu video render bị lỗi kỹ thuật hoặc quá 60s, hệ thống yêu cầu cắt dựng lại. Chốt chặn: **Tối đa 1 lần render lại** (`video_revision_count < 1`).
+3. **Touchpoint 3 Loop Breaker:** Nếu con người yêu cầu sửa gói ấn phẩm, đồ thị cho phép lặp lại tối đa 4 lần. Vượt quá 4 chu kỳ (`total_cycle_count > 4`), hệ thống tự động kích hoạt trạng thái **HALTED** để chống lặp vô hạn và tràn chi phí token.
+4. **DAG Fork State Isolation:** Trong nhánh chạy song song giữa Text và Video, các node độc lập chỉ cập nhật các trường riêng (`outline` và `video_script`), tránh hoàn toàn xung đột ghi đè đồng thời trên cùng một state key.
 
 ---
 
 ## 🧪 Chạy Kiểm Thử Tự Động
 
-Dự án có bộ test suite bao phủ 100% các Phase:
+Dự án sở hữu bộ test suite bao phủ toàn diện 24 ca kiểm thử:
 ```bash
 pytest -v tests/
 ```
-Kết quả mong đợi:
+Kết quả kiểm thử chuẩn:
 ```text
 tests/test_phase2_graph.py ......................... PASSED (3/3)
 tests/test_phase3_text_pipeline.py .................. PASSED (5/5)
 tests/test_phase4_media_pipeline.py ................. PASSED (6/6)
 tests/test_phase5_operations.py ..................... PASSED (5/5)
 tests/test_state_and_planning.py .................... PASSED (5/5)
-======================= 24 passed in 44.41s =======================
+======================= 24 passed in 51.80s =======================
 ```
 
 ---
 
 ## 📜 Giấy Phép & Bản Quyền
-Dự án được phát triển và vận hành bởi **LinTech**. Mọi đóng góp và mã nguồn được chia sẻ theo giấy phép MIT License.
+Dự án được phát triển và vận hành bởi **POTA**. Mọi đóng góp và mã nguồn được chia sẻ theo giấy phép MIT License.
