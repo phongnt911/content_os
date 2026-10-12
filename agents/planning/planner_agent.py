@@ -34,6 +34,7 @@ def run_planner_agent(
     trends_feed: List[Dict[str, Any]],
     brand_rules: List[str],
     week_id: str = DEFAULT_WEEK_ID,
+    focus_topic: str = "",
 ) -> WeeklyContentPlan:
     """Thực thi logic cốt lõi của Agent 2 với structured output bắt buộc theo Rule 4."""
     llm = get_llm(model_type="core")
@@ -46,9 +47,10 @@ def run_planner_agent(
     ]) if trends_feed else "Chưa có trends_feed. Tự đề xuất các góc bài hot nhất về AI & Automation."
 
     rules_context = "\n".join([f"- {r}" for r in brand_rules]) if brand_rules else "Tập trung giá trị thực tiễn, không lý thuyết suông."
+    focus_instruction = f"\n=== CHỦ ĐỀ TRỌNG TÂM DO USER YÊU CẦU ===\nToàn bộ hoặc ít nhất 2-3 bài viết trong ma trận bắt buộc phải khai thác chuyên sâu về: '{focus_topic}'\n" if focus_topic else ""
 
     user_prompt = f"""Hãy lập ma trận kế hoạch nội dung tuần {week_id} gồm từ 5 đến 7 bài viết.
-
+{focus_instruction}
 === TRENDS RADAR ĐƯỢC CHỌN ===
 {trends_context}
 
@@ -74,11 +76,14 @@ def planner_node(state: ContentOSState) -> Dict[str, Any]:
     trends_feed = state.get("trends_feed", [])
     brand_rules = state.get("brand_rules", [])
     week_id = state.get("week_id", DEFAULT_WEEK_ID)
+    selected_topic = state.get("selected_topic", {})
+    focus_topic = selected_topic.get("angle") or selected_topic.get("topic") or ""
 
     plan = run_planner_agent(
         trends_feed=trends_feed,
         brand_rules=brand_rules,
         week_id=week_id,
+        focus_topic=focus_topic,
     )
 
     plan_items_data = [item.model_dump() for item in plan.items]

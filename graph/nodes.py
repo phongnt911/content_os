@@ -61,7 +61,33 @@ def human_approve_plan_node(state: ContentOSState) -> Dict[str, Any]:
         is_approved = False
         revision_note = str(user_response)
 
-    selected_topic = content_plan[0] if (is_approved and content_plan) else {}
+    selected_topic: Dict[str, Any] = {}
+    if is_approved:
+        if isinstance(user_response, dict) and user_response.get("custom_topic"):
+            c_topic = user_response["custom_topic"]
+            if isinstance(c_topic, dict):
+                selected_topic = c_topic
+            else:
+                selected_topic = {
+                    "id": "post_custom",
+                    "angle": str(c_topic),
+                    "hook_concept": f"Ý tưởng mở bài cho: {c_topic}",
+                    "target_channel": "Facebook",
+                    "core_message": str(c_topic),
+                }
+        elif isinstance(user_response, dict) and "selected_index" in user_response:
+            try:
+                idx = int(user_response["selected_index"])
+                if 0 <= idx < len(content_plan):
+                    selected_topic = content_plan[idx]
+                elif content_plan:
+                    selected_topic = content_plan[0]
+            except (ValueError, TypeError):
+                selected_topic = content_plan[0] if content_plan else {}
+        elif state.get("selected_topic") and state["selected_topic"].get("angle"):
+            selected_topic = state["selected_topic"]
+        elif content_plan:
+            selected_topic = content_plan[0]
 
     return {
         "plan_approved": is_approved,

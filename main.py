@@ -38,25 +38,30 @@ def print_divider(title: str = "") -> None:
 
 
 def prompt_touchpoint_1(interrupt_data: Dict[str, Any]) -> Command:
-    """Tương tác Human Touchpoint 1: Phê duyệt ma trận kế hoạch tuần."""
-    print_divider("HUMAN TOUCHPOINT 1: DUYỆT KẾ HOẠCH TUẦN")
+    """Tương tác Human Touchpoint 1: Phê duyệt ma trận kế hoạch tuần và chọn chủ đề."""
+    print_divider("HUMAN TOUCHPOINT 1: DUYỆT KẾ HOẠCH TUẦN & CHỌN CHỦ ĐỀ")
     content_plan = interrupt_data.get("content_plan", [])
-    print(f"Ma trận kế hoạch tuần ({len(content_plan)} bài viết):")
+    total_posts = len(content_plan)
+    print(f"Ma trận kế hoạch tuần ({total_posts} bài viết):")
     for idx, item in enumerate(content_plan, 1):
-        print(f"  {idx}. [{item.get('target_channel', 'Facebook')}] ID: {item.get('id')}")
-        print(f"     Angle: {item.get('angle')}")
-        print(f"     Hook:  {item.get('hook_concept')}")
-        print(f"     Core:  {item.get('core_message')}")
+        print(f"  [{idx}] [{item.get('target_channel', 'Facebook')}] ID: {item.get('id')}")
+        print(f"      Góc tiếp cận: {item.get('angle')}")
+        print(f"      Ý tưởng Hook: {item.get('hook_concept')}")
+        print(f"      Thông điệp:   {item.get('core_message')}")
         print()
 
     print("Quyết định của bạn:")
-    print("  [Y] Duyệt kế hoạch (Kích hoạt Dây chuyền Chữ & Dây chuyền Media song song)")
-    print("  [N] Từ chối kế hoạch (Kết thúc chu trình)")
+    print(f"  [1 - {total_posts}] Chọn bài viết tương ứng để sản xuất video & nội dung ngay")
+    print("  [Y]     Duyệt toàn bộ và lấy bài số 1 mặc định")
+    print("  [C]     Nhập chủ đề tùy chỉnh mới hoàn toàn (Custom Topic)")
+    print("  [N]     Từ chối kế hoạch (Kết thúc chu trình)")
 
     try:
-        choice = input("Lựa chọn (Y/N, mặc định Y): ").strip().lower()
+        raw_choice = input(f"Lựa chọn (1-{total_posts} / Y / C / N, mặc định 1): ").strip()
     except EOFError:
-        choice = "y"
+        raw_choice = "1"
+
+    choice = raw_choice.lower()
 
     if choice in ("n", "no"):
         try:
@@ -66,8 +71,26 @@ def prompt_touchpoint_1(interrupt_data: Dict[str, Any]) -> Command:
         print("[!] Đã từ chối kế hoạch. Luồng sẽ kết thúc.")
         return Command(resume={"approved": False, "note": note or "User rejected plan"})
 
-    print("[OK] Kế hoạch đã được phê duyệt! Bắt đầu phân nhánh song song...")
-    return Command(resume={"approved": True, "note": "Phê duyệt kế hoạch tuần"})
+    if choice == "c":
+        try:
+            custom_title = input("Nhập chủ đề / góc bài viết tùy chỉnh của bạn: ").strip()
+        except EOFError:
+            custom_title = "Chủ đề tự chọn theo yêu cầu"
+        print(f"[OK] Đã chọn chủ đề tùy chỉnh: '{custom_title}'")
+        return Command(resume={"approved": True, "custom_topic": custom_title})
+
+    # Nếu người dùng nhập số thứ tự bài
+    if choice.isdigit():
+        idx = int(choice)
+        if 1 <= idx <= total_posts:
+            chosen_post = content_plan[idx - 1]
+            print(f"[OK] Đã chọn bài số {idx}: '{chosen_post.get('angle')}'")
+            return Command(resume={"approved": True, "selected_index": idx - 1})
+
+    # Mặc định chọn bài 1
+    default_post = content_plan[0] if content_plan else {}
+    print(f"[OK] Kế hoạch đã được phê duyệt! Chọn bài số 1: '{default_post.get('angle')}'")
+    return Command(resume={"approved": True, "selected_index": 0})
 
 
 def prompt_touchpoint_2(interrupt_data: Dict[str, Any]) -> Command:
@@ -177,7 +200,25 @@ def run_interactive_content_os(auto_approve: bool = False) -> None:
         "weekly_metrics": {},
     }
 
-    print(f"Bắt đầu chu trình cho Tuần: {initial_state['week_id']}")
+    if not auto_approve:
+        print_divider("KHỞI TẠO CHỦ ĐỀ TUẦN")
+        try:
+            user_topic_seed = input("Nhập chủ đề trọng tâm tuần này (Nhấn Enter để AI tự động quét radar xu hướng): ").strip()
+            if user_topic_seed:
+                initial_state["selected_topic"] = {
+                    "id": "seed_topic",
+                    "angle": user_topic_seed,
+                    "hook_concept": f"Ý tưởng mở bài cho: {user_topic_seed}",
+                    "target_channel": "Đa kênh",
+                    "core_message": user_topic_seed,
+                }
+                print(f"[OK] Đã thiết lập chủ đề trọng tâm: '{user_topic_seed}'")
+            else:
+                print("[*] Không nhập chủ đề riêng -> AI sẽ tự động quét radar đối thủ...")
+        except EOFError:
+            pass
+
+    print(f"\nBắt đầu chu trình cho Tuần: {initial_state['week_id']}")
     print("[*] Agent 1 (Research) đang quét tin tức và radar đối thủ...")
     print("[*] Agent 2 (Plan) đang lập ma trận nội dung tuần...")
 

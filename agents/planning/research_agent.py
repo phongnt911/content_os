@@ -26,13 +26,18 @@ Nhiệm vụ của bạn:
 Tuân thủ nghiêm ngặt Brand Rules của hệ thống nếu có."""
 
 
-def run_research_agent(brand_rules: List[str]) -> ResearchReport:
+def run_research_agent(
+    brand_rules: List[str],
+    focus_topic: str = "",
+) -> ResearchReport:
     """Thực thi logic cốt lõi của Agent 1 với structured output."""
     llm = get_llm(model_type="fast")
     structured_llm = llm.with_structured_output(ResearchReport)
 
     rules_context = "\n- ".join(brand_rules) if brand_rules else "Ưu tiên nội dung AI, Productivity, Solopreneur, No-code."
-    user_prompt = f"""Hãy quét và tổng hợp 5 chủ đề xu hướng công nghệ nổi bật nhất cho tuần này.
+    topic_instruction = f"\nƯu tiên trọng tâm: Nghiên cứu sâu và phát triển 5 góc nhìn xoay quanh chủ đề: '{focus_topic}'." if focus_topic else ""
+
+    user_prompt = f"""Hãy quét và tổng hợp 5 chủ đề xu hướng công nghệ nổi bật nhất cho tuần này.{topic_instruction}
 Brand Rules hiện tại:
 - {rules_context}
 
@@ -53,7 +58,10 @@ def research_node(state: ContentOSState) -> Dict[str, Any]:
     Nhận `state: ContentOSState`, trả về dictionary cập nhật `trends_feed`.
     """
     brand_rules = state.get("brand_rules", [])
-    report = run_research_agent(brand_rules)
+    selected_topic = state.get("selected_topic", {})
+    focus_topic = selected_topic.get("angle") or selected_topic.get("topic") or ""
+
+    report = run_research_agent(brand_rules, focus_topic=focus_topic)
 
     trends_data = [trend.model_dump() for trend in report.trends]
     return {
