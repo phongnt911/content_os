@@ -1,10 +1,9 @@
 """LangGraph StateGraph Workflow Assembly & Compilation.
 
 Biên dịch đồ thị trạng thái Cyclic StateGraph cho LinTech Content OS:
-- Giai đoạn Phase 2:
-  START -> research -> plan -> human_approve_plan
-  human_approve_plan --[approved=True]--> plan_dispatch -> END
-  human_approve_plan --[approved=False]--> END
+- Chặng 1: Planning Layer & Human Touchpoint 1
+- Chặng 2A: Text Pipeline & Vòng lặp tự sửa bài (Self-Correction Loop: score < 8)
+- Hội tụ tạm thời tại join_node -> END (sẵn sàng đón Media Pipeline ở Phase 4)
 """
 
 from typing import Optional, Any
@@ -15,40 +14,74 @@ from graph.nodes import (
     research_node,
     planner_node,
     human_approve_plan_node,
-    plan_dispatch_node,
+    outline_node,
+    writer_node,
+    review_node,
+    factcheck_node,
+    repurpose_node,
+    carousel_node,
+    join_node,
 )
-from graph.edges import route_after_plan_approval
+from graph.edges import (
+    route_after_plan_approval,
+    route_after_text_review,
+)
 
 
 def create_content_os_graph(checkpointer: Optional[Any] = None) -> Any:
-    """Khởi tạo và biên dịch StateGraph cho Content OS."""
+    """Khởi tạo và biên dịch StateGraph cho Content OS hoàn chỉnh Text Pipeline."""
     builder = StateGraph(ContentOSState)
 
-    # 1. Thêm các Node
+    # 1. Thêm Planning Layer Nodes
     builder.add_node("research", research_node)
-    builder.add_node("plan", planner_node)
+    builder.add_node("planner", planner_node)
     builder.add_node("human_approve_plan", human_approve_plan_node)
-    builder.add_node("plan_dispatch", plan_dispatch_node)
 
-    # 2. Thêm các Edge cố định
+    # 2. Thêm Text Pipeline Nodes (Tên node không được trùng với key trong ContentOSState)
+    builder.add_node("generate_outline", outline_node)
+    builder.add_node("writer", writer_node)
+    builder.add_node("review_text", review_node)
+    builder.add_node("fact_check", factcheck_node)
+    builder.add_node("repurpose_threads", repurpose_node)
+    builder.add_node("generate_carousel", carousel_node)
+    builder.add_node("join_node", join_node)
+
+    # 3. Các Edge chặng Planning
     builder.add_edge(START, "research")
-    builder.add_edge("research", "plan")
-    builder.add_edge("plan", "human_approve_plan")
+    builder.add_edge("research", "planner")
+    builder.add_edge("planner", "human_approve_plan")
 
-    # 3. Thêm Conditional Edge sau Human Touchpoint 1
+    # 4. Conditional Edge sau Human Touchpoint 1
     builder.add_conditional_edges(
         "human_approve_plan",
         route_after_plan_approval,
         {
-            "plan_dispatch": "plan_dispatch",
+            "generate_outline": "generate_outline",
             END: END,
         },
     )
 
-    # 4. plan_dispatch tạm thời kết thúc tại END trong Phase 2 (sẽ nối sang Chặng 2 ở Phase 3 & 4)
-    builder.add_edge("plan_dispatch", END)
+    # 5. Text Pipeline Edges & Vòng lặp tự sửa bài
+    builder.add_edge("generate_outline", "writer")
+    builder.add_edge("writer", "review_text")
 
-    # 5. Compile với checkpointer để kích hoạt interrupt()
+    # Vòng lặp tự sửa bài: nếu draft_score < 8 và text_revision_count < 2 quay lại writer
+    builder.add_conditional_edges(
+        "review_text",
+        route_after_text_review,
+        {
+            "writer": "writer",
+            "fact_check": "fact_check",
+        },
+    )
+
+    # Chuỗi xử lý sau khi duyệt text
+    builder.add_edge("fact_check", "repurpose_threads")
+    builder.add_edge("repurpose_threads", "generate_carousel")
+    builder.add_edge("generate_carousel", "join_node")
+    builder.add_edge("join_node", END)
+
+    # 6. Compile đồ thị với checkpointer
     saver = checkpointer if checkpointer is not None else get_checkpointer()
     app = builder.compile(checkpointer=saver)
     return app

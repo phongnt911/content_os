@@ -1,17 +1,26 @@
 """LangGraph Node Definitions.
 
 Đóng gói các node trong đồ thị trạng thái:
-- Node 1: research_node (Agent 1)
-- Node 2: planner_node (Agent 2)
-- Node 3: human_approve_plan_node (Human Touchpoint 1 với interrupt())
-- Node 4: plan_dispatch_node (Chuẩn bị payload cho các chặng tiếp theo)
+- Planning Layer: research_node, planner_node, human_approve_plan_node
+- Text Pipeline: outline_node, writer_node, review_node, factcheck_node, repurpose_node, carousel_node
+- Convergence: join_node
 """
 
 from typing import Dict, Any
 from langgraph.types import interrupt
 from core.state import ContentOSState
+
+# Planning Layer Nodes
 from agents.planning.research_agent import research_node
 from agents.planning.planner_agent import planner_node
+
+# Text Pipeline Nodes
+from agents.text_pipeline.outline_agent import outline_node
+from agents.text_pipeline.writer_agent import writer_node
+from agents.text_pipeline.review_agent import review_node
+from agents.text_pipeline.factcheck_agent import factcheck_node
+from agents.text_pipeline.repurpose_agent import repurpose_node
+from agents.text_pipeline.carousel_agent import carousel_node
 
 
 def human_approve_plan_node(state: ContentOSState) -> Dict[str, Any]:
@@ -47,20 +56,16 @@ def human_approve_plan_node(state: ContentOSState) -> Dict[str, Any]:
         is_approved = False
         revision_note = str(user_response)
 
+    # Tự động chọn bài viết đầu tiên làm topic nếu được duyệt
+    selected_topic = content_plan[0] if (is_approved and content_plan) else {}
+
     return {
         "plan_approved": is_approved,
         "user_revision_note": revision_note,
+        "selected_topic": selected_topic,
     }
 
 
-def plan_dispatch_node(state: ContentOSState) -> Dict[str, Any]:
-    """Node kích hoạt sau khi kế hoạch tuần được phê duyệt.
-    
-    Chọn bài viết đầu tiên trong content_plan làm `selected_topic` để sẵn sàng
-    truyền vào Chặng 2 (Text Pipeline & Visual Pipeline).
-    """
-    content_plan = state.get("content_plan", [])
-    selected_topic = content_plan[0] if content_plan else {}
-    return {
-        "selected_topic": selected_topic
-    }
+def join_node(state: ContentOSState) -> Dict[str, Any]:
+    """Node hội tụ các nhánh xử lý (Text Pipeline & Visual Pipeline)."""
+    return {}
