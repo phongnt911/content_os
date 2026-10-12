@@ -13,7 +13,7 @@ from core.state import ContentOSState, CarouselResult
 from config import get_llm
 
 
-CAROUSEL_SYSTEM_PROMPT = """Bạn là Agent 8 (Visual Storytelling & Carousel Specialist) thuộc LinTech Content OS.
+CAROUSEL_SYSTEM_PROMPT = """Bạn là Agent 8 (Visual Storytelling & Carousel Specialist) thuộc POTA Content OS.
 Nhiệm vụ của bạn:
 1. Tiếp nhận nội dung bài viết hoàn chỉnh (fact_checked_draft).
 2. Tái cấu trúc thành kịch bản slide Carousel ảnh từ 5 đến 7 trang:
@@ -51,10 +51,13 @@ def carousel_node(state: ContentOSState) -> Dict[str, Any]:
     
     Nhận `state: ContentOSState`, trả về dictionary cập nhật `carousel_slides`.
     """
-    source_draft = state.get("fact_checked_draft") or state.get("raw_draft", "")
-    result = run_carousel_agent(source_draft)
+    draft = state.get("fact_checked_draft") or state.get("raw_draft", "")
+    if not draft:
+        draft = "Ý tưởng bài viết phân tích giá trị thực tiễn cho cộng đồng POTA."
 
-    slides_data = [slide.model_dump() for slide in result.slides]
+    result = run_carousel_agent(draft)
+
+    slides_data = [s.model_dump() for s in result.slides]
     return {
-        "carousel_slides": slides_data
+        "carousel_slides": slides_data,
     }

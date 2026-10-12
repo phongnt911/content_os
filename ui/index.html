@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PoTa Content OS - Đội AI Agent Content Đa Kênh</title>
+    <title>POTA Content OS - Đội AI Agent Content Đa Kênh</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -461,22 +461,45 @@
             <div class="modal-header">
                 <div class="modal-badge">🔶 HUMAN TOUCHPOINT 1</div>
                 <h3>PHÊ DUYỆT MA TRẬN KẾ HOẠCH TUẦN & CHỌN CHỦ ĐỀ</h3>
-                <button class="modal-close-btn" onclick="closeModal('modalTouchpoint1')">✕</button>
+                <button class="modal-close-btn" onclick="abortWorkflow('Đóng modal duyệt kế hoạch')">✕</button>
             </div>
             <div class="modal-body">
-                <p class="modal-desc">Agent 1 & Agent 2 đã quét radar và đề xuất các bài viết dưới đây. Vui lòng chọn bài viết bạn muốn sản xuất ngay hoặc nhập chủ đề tùy chỉnh:</p>
-                <div class="plan-cards-list" id="planCardsList">
-                    <!-- Sẽ render động các bài viết từ API -->
+                <!-- Chế độ 1: Chọn bài từ ma trận đề xuất -->
+                <div id="planSelectionView">
+                    <p class="modal-desc">Agent 1 & Agent 2 đã quét radar và lập ma trận nội dung dưới đây. Vui lòng chọn bài viết bạn muốn sản xuất ngay hoặc nhập chủ đề tùy chỉnh:</p>
+                    <div class="plan-cards-list" id="planCardsList">
+                        <!-- Sẽ render động các bài viết từ API/Simulation -->
+                    </div>
+
+                    <div class="custom-topic-override">
+                        <label>Hoặc nạp nhanh chủ đề tùy chỉnh của bạn (Custom Topic):</label>
+                        <input type="text" id="customTopicInput" placeholder="Ví dụ: Chiến lược quảng cáo hiệu quả, Bí quyết bán hàng thời trang, Cách tối ưu dòng tiền..." />
+                    </div>
                 </div>
 
-                <div class="custom-topic-override">
-                    <label>Hoặc nhập chủ đề tùy chỉnh của bạn (Custom Topic):</label>
-                    <input type="text" id="customTopicInput" placeholder="Ví dụ: Hướng dẫn tích hợp LangGraph với n8n tự động hóa..." />
+                <!-- Chế độ 2: Hỏi ngược lại nhu cầu khi người dùng chưa ưng ý kế hoạch -->
+                <div id="planRejectRefineView" style="display: none;" class="refine-container">
+                    <div class="refine-banner">
+                        <span class="refine-icon">🎯</span>
+                        <div>
+                            <h4>BẠN MUỐN POTA ĐỔI HƯỚNG SANG CHỦ ĐỀ / LĨNH VỰC NÀO?</h4>
+                            <p class="modal-desc">Hãy nhập chủ đề hoặc mục tiêu cụ thể bạn muốn tập trung vào tuần này. Agent 1 & Agent 2 sẽ quét radar và thiết lập lại toàn bộ ma trận bài viết chuẩn xác hơn:</p>
+                        </div>
+                    </div>
+                    <div class="refine-input-group">
+                        <label>Chủ đề / Ngành nghề / Góc tiếp cận mong muốn:</label>
+                        <textarea id="refinedTopicInput" rows="3" placeholder="Ví dụ: Tôi muốn làm loạt bài về 'Kinh nghiệm tối ưu chi phí quảng cáo Facebook cho shop thời trang' hướng tới chủ shop nhỏ..."></textarea>
+                    </div>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button class="btn-danger" onclick="submitTouchpoint1(false)">✕ Từ chối kế hoạch</button>
+            <div class="modal-footer" id="planNormalFooter">
+                <button class="btn-danger" onclick="togglePlanRejectView(true)">✕ Từ chối / Đổi hướng đề tài</button>
                 <button class="btn-success" onclick="submitTouchpoint1(true)">✓ Phê duyệt & Bắt đầu Dây chuyền Chữ + Video</button>
+            </div>
+            <div class="modal-footer" id="planRefineFooter" style="display: none;">
+                <button class="btn-ghost" onclick="togglePlanRejectView(false)">↩ Quay lại danh sách bài</button>
+                <button class="btn-danger" onclick="abortWorkflow('Bạn đã từ chối kế hoạch tuần và dừng luồng')">✕ Dừng hẳn luồng</button>
+                <button class="btn-primary" onclick="submitReplanWithNewTopic()">⚡ Lập lại kế hoạch theo chủ đề này</button>
             </div>
         </div>
     </div>

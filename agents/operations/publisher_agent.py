@@ -57,7 +57,7 @@ class PublisherService:
 class DefaultPublisherService(PublisherService):
     """Triển khai mặc định tạo canonical links mô phỏng việc phát hành thành công đa kênh."""
 
-    def __init__(self, brand_prefix: str = "lintech"):
+    def __init__(self, brand_prefix: str = "pota"):
         self.brand_prefix = brand_prefix
 
     def _generate_post_id(self, content_sample: str) -> str:
@@ -107,10 +107,10 @@ def run_publisher_agent(
     """Thực thi logic xuất bản đa kênh của Agent 14."""
     active_service = service or DefaultPublisherService()
 
-    topic_title = state.get("selected_topic", {}).get("angle", "AI Content Automation")
-    fact_checked_draft = state.get("fact_checked_draft") or state.get("raw_draft", "Nội dung bài viết LinTech")
-    rendered_video_url = state.get("rendered_video_url") or "https://storage.lintech.vn/videos/clip_rendered.mp4"
-    cover_image_url = state.get("cover_image_url") or "https://storage.lintech.vn/images/cover.jpg"
+    topic_title = state.get("selected_topic", {}).get("angle", "Chiến lược nội dung đa kênh")
+    fact_checked_draft = state.get("fact_checked_draft") or state.get("raw_draft", "Nội dung bài viết POTA")
+    rendered_video_url = state.get("rendered_video_url") or "https://storage.pota.vn/videos/clip_rendered.mp4"
+    cover_image_url = state.get("cover_image_url") or "https://storage.pota.vn/images/cover.jpg"
     threads_posts = state.get("threads_posts", [fact_checked_draft[:200]])
 
     published_links: Dict[str, str] = {
@@ -121,7 +121,7 @@ def run_publisher_agent(
         "tiktok": active_service.publish_tiktok(
             video_url=rendered_video_url,
             title=topic_title,
-            tags="#lintech #agenticai #contentos",
+            tags="#pota #contentos #multichannel",
         ),
         "threads": active_service.publish_threads(
             posts=threads_posts,

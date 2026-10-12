@@ -15,7 +15,7 @@ from core.state import ContentOSState, VideoReviewResult
 from config import get_llm
 
 
-VIDEO_REVIEW_SYSTEM_PROMPT = """Bạn là Agent 11 (Video Technical QA & Broadcast Inspector) thuộc LinTech Content OS.
+VIDEO_REVIEW_SYSTEM_PROMPT = """Bạn là Agent 11 (Video Technical QA & Broadcast Inspector) thuộc POTA Content OS.
 Nhiệm vụ của bạn:
 1. Thẩm định thông số kỹ thuật của video:
    - Thời lượng thực tế (measured_duration): Bắt buộc < 60 giây.
@@ -55,20 +55,24 @@ Xuất ra cấu trúc VideoReviewResult hoàn chỉnh."""
 def review_video_node(state: ContentOSState) -> Dict[str, Any]:
     """LangGraph Node tương thích cho Agent 11.
     
-    Nhận `state: ContentOSState`, trả về dictionary cập nhật `video_approved` và tăng `video_revision_count`.
+    Nhận `state: ContentOSState`, trả về dictionary cập nhật `video_approved` và `video_revision_count`.
     """
-    video_url = state.get("rendered_video_url") or "https://cdn.lintech.media/sample.mp4"
-    video_duration = state.get("video_duration", 45)
+    video_url = state.get("rendered_video_url") or "https://cdn.pota.media/sample.mp4"
+    duration = state.get("video_duration", 45)
     script = state.get("video_script", {})
     current_revisions = state.get("video_revision_count", 0)
 
-    # Thẩm định chất lượng
-    review_result = run_review_video_agent(video_url, video_duration, script)
+    result = run_review_video_agent(
+        video_url=video_url,
+        duration=duration,
+        script=script,
+    )
 
-    # Đảm bảo logic kiểm tra thời lượng < 60s
-    is_approved = review_result.video_approved and (video_duration < 60)
+    new_revision_count = current_revisions
+    if not result.video_approved:
+        new_revision_count += 1
 
     return {
-        "video_approved": is_approved,
-        "video_revision_count": current_revisions + 1,
+        "video_approved": result.video_approved,
+        "video_revision_count": new_revision_count,
     }

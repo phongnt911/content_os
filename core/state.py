@@ -1,4 +1,4 @@
-"""LinTech Content OS - State & Pydantic Schema Specification.
+"""POTA Content OS - State & Pydantic Schema Specification.
 
 This module defines:
 1. Strict Pydantic V2 models for structured outputs of all 16 agents.
@@ -153,7 +153,7 @@ class CommentReplyItem(BaseModel):
     """Phản hồi chi tiết cho từng loại ý định của độc giả."""
     intent: str = Field(description="Ý định bình luận (Hỏi tài liệu, thảo luận chuyên môn, phản biện)")
     sample_comment: str = Field(description="Bình luận giả lập của người theo dõi")
-    reply_template: str = Field(description="Câu trả lời phản hồi chuẩn giọng điệu LinTech kèm CTA")
+    reply_template: str = Field(description="Câu trả lời phản hồi chuẩn giọng điệu POTA kèm CTA")
 
 
 class CommunityStrategyResult(BaseModel):

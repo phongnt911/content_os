@@ -15,7 +15,7 @@ from core.state import ContentOSState, AnalyticsReportResult
 from config import get_llm
 
 
-ANALYTICS_SYSTEM_PROMPT = """Bạn là Agent 16 (Continuous Learning & Performance Analyst) thuộc LinTech Content OS.
+ANALYTICS_SYSTEM_PROMPT = """Bạn là Agent 16 (Continuous Learning & Performance Analyst) thuộc POTA Content OS.
 Nhiệm vụ của bạn:
 1. Đánh giá số liệu tương tác tuần của bài viết và video đã phát hành.
 2. Nhận diện góc tiếp cận chiến thắng (Winning Angles) tạo ra lượng reach hoặc conversion cao nhất.
@@ -33,7 +33,7 @@ def run_analytics_agent(
     structured_llm = llm.with_structured_output(AnalyticsReportResult)
 
     selected_topic = state.get("selected_topic", {})
-    angle = selected_topic.get("angle", "Thực chiến công nghệ & AI")
+    angle = selected_topic.get("angle", "Chiến lược nội dung thực chiến")
     published_links = state.get("published_links", {})
     current_brand_rules = state.get("brand_rules", [])
 

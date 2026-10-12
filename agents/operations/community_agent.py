@@ -3,7 +3,7 @@
 Nhiệm vụ:
 - Tiếp nhận thông điệp bài viết, kịch bản CTA và Brand Guidelines từ ContentOSState.
 - Thiết lập chiến lược phản hồi tự động và seeding:
-  + Nhận diện từ khóa CTA kích hoạt (e.g., 'WORKFLOW', 'AI', 'AUTOMATION').
+  + Nhận diện từ khóa CTA kích hoạt (e.g., 'TÀI LIỆU', 'HƯỚNG DẪN', 'CHI TIẾT', 'WORKFLOW').
   + Chuẩn bị danh sách bình luận gieo mầm (Seeding comments) kích thích thảo luận sâu.
   + Chuẩn bị kịch bản giải đáp tự động (FAQ Responses) theo các ý định phổ biến (Hỏi tài liệu, thắc mắc chi phí, phản biện).
 - Xuất ra `CommunityStrategyResult` chuẩn Pydantic V2.
@@ -15,14 +15,14 @@ from core.state import ContentOSState, CommunityStrategyResult
 from config import get_llm
 
 
-COMMUNITY_SYSTEM_PROMPT = """Bạn là Agent 15 (Community Manager & Lead Conversion Specialist) thuộc LinTech Content OS.
+COMMUNITY_SYSTEM_PROMPT = """Bạn là Agent 15 (Community Manager & Lead Conversion Specialist) thuộc POTA Content OS.
 Nhiệm vụ của bạn:
 1. Phân tích nội dung bài viết đã xuất bản và lời kêu gọi hành động (CTA).
-2. Xây dựng chiến lược chăm sóc bình luận và điều hướng độc giả:
-   - target_cta_keyword: Từ khóa chính độc giả cần để lại dưới comment (viết hoa, ngắn gọn, e.g. WORKFLOW, AUTOMATE).
+2. Xây dựng chiến lược chăm sóc bình luận và điều hướng độc giả phù hợp với ngành nghề:
+   - target_cta_keyword: Từ khóa chính độc giả cần để lại dưới comment (viết hoa, ngắn gọn, e.g. TÀI LIỆU, CHI TIẾT, HƯỚNG DẪN).
    - lead_magnet_url: Link landing page hoặc tài liệu hướng dẫn thực chiến.
-   - seeding_comments: Tối thiểu 2 bình luận mồi giả lập chuyên gia thảo luận để kích hoạt thuật toán mạng xã hội.
-   - faq_replies: Tối thiểu 2 kịch bản trả lời mẫu có tâm, đúng tinh thần thực chiến, lồng ghép link chuyển đổi tự nhiên.
+   - seeding_comments: Tối thiểu 2 bình luận mồi giả lập người đọc thảo luận để kích hoạt thuật toán mạng xã hội.
+   - faq_replies: Tối thiểu 2 kịch bản trả lời mẫu có tâm, đúng tinh thần thực chiến, lồng ghép giá trị tự nhiên.
 
 Bắt buộc trả về đúng định dạng CommunityStrategyResult."""
 
@@ -36,7 +36,7 @@ def run_community_agent(
     llm = get_llm(model_type="fast")
     structured_llm = llm.with_structured_output(CommunityStrategyResult)
 
-    angle = selected_topic.get("angle", "Thực chiến công nghệ & AI")
+    angle = selected_topic.get("angle", "Chiến lược nội dung đa kênh")
     target_channel = selected_topic.get("target_channel", "Đa kênh")
     rules_context = "\n- ".join(brand_rules) if brand_rules else "Thân thiện, giải quyết triệt để vấn đề, không spam."
 
@@ -56,19 +56,21 @@ Xuất ra cấu trúc CommunityStrategyResult hoàn chỉnh."""
         HumanMessage(content=user_prompt),
     ]
 
-    strategy: CommunityStrategyResult = structured_llm.invoke(messages)
-    return strategy
+    result: CommunityStrategyResult = structured_llm.invoke(messages)
+    return result
 
 
 def community_node(state: ContentOSState) -> Dict[str, Any]:
     """LangGraph Node tương thích cho Agent 15.
     
-    Nhận `state: ContentOSState`, sinh kịch bản chăm sóc cộng đồng.
+    Nhận `state: ContentOSState`, trả về dictionary cập nhật chiến lược bình luận.
     """
-    draft = state.get("fact_checked_draft") or state.get("raw_draft", "")
+    content_draft = state.get("fact_checked_draft") or state.get("raw_draft", "")
     selected_topic = state.get("selected_topic", {})
     brand_rules = state.get("brand_rules", [])
 
-    strategy = run_community_agent(draft, selected_topic, brand_rules)
+    strategy = run_community_agent(content_draft, selected_topic, brand_rules)
 
-    return {}
+    return {
+        "comment_strategy": strategy.model_dump()
+    }

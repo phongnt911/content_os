@@ -15,10 +15,10 @@ from core.state import ContentOSState, CoverPromptResult
 from config import get_llm
 
 
-COVER_SYSTEM_PROMPT = """Bạn là Agent 12 (Visual Branding & Cover Thumbnail Artist) thuộc LinTech Content OS.
+COVER_SYSTEM_PROMPT = """Bạn là Agent 12 (Visual Branding & Cover Thumbnail Artist) thuộc POTA Content OS.
 Nhiệm vụ của bạn:
 1. Phân tích kịch bản video và chủ đề nội dung.
-2. Thiết kế định hướng ảnh bìa thumbnail thu hút lượt click (High CTR):
+2. Thiết kế định hướng ảnh bìa thumbnail thu hút lượt click (High CTR) phù hợp với lĩnh vực nội dung:
    - prompt_3_4: Prompt chi tiết bằng tiếng Anh sinh ảnh bìa tỉ lệ 3:4 cho Facebook/Instagram Feed (Midjourney / Flux format).
    - prompt_9_16: Prompt chi tiết bằng tiếng Anh sinh ảnh bìa tỉ lệ 9:16 cho TikTok / Shorts / Reels.
    - overlay_headline: Dòng chữ giật tít ngắn gọn (dưới 6 từ, in hoa, tạo sự tương phản mạnh) đè lên ảnh.
@@ -36,9 +36,9 @@ def run_cover_agent(
     llm = get_llm(model_type="fast")
     structured_llm = llm.with_structured_output(CoverPromptResult)
 
-    topic_title = selected_topic.get("angle", "AI Automation Workflow")
-    hook = video_script.get("hook_opening", "Tự động hóa video trong 30 giây")
-    rules_context = "\n- ".join(brand_rules) if brand_rules else "Gam màu công nghệ hiện đại, độ tương phản cao."
+    topic_title = selected_topic.get("angle", "Chiến lược nội dung thực chiến")
+    hook = video_script.get("hook_opening", "Bí quyết tạo đột phá trong tầm tay")
+    rules_context = "\n- ".join(brand_rules) if brand_rules else "Hình ảnh tương phản cao, phong cách hiện đại thu hút thị giác."
 
     user_prompt = f"""Hãy thiết kế bộ prompt và layout ảnh bìa thumbnail cho video sau:
 - Chủ đề: {topic_title}
@@ -69,9 +69,9 @@ def cover_agent_node(state: ContentOSState) -> Dict[str, Any]:
 
     cover_result = run_cover_agent(selected_topic, video_script, brand_rules)
 
-    # Sinh link thumbnail mẫu theo chuẩn CDN
+    # Sinh link thumbnail mẫu theo chuẩn CDN POTA
     topic_id = selected_topic.get("id", "post_01")
-    generated_cover_url = f"https://cdn.lintech.media/thumbnails/{topic_id}_cover_3x4.jpg"
+    generated_cover_url = f"https://cdn.pota.media/thumbnails/{topic_id}_cover_3x4.jpg"
 
     return {
         "cover_image_url": generated_cover_url

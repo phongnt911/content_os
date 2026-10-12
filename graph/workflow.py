@@ -1,6 +1,6 @@
 """LangGraph StateGraph Workflow Assembly & Compilation.
 
-Biên dịch đồ thị trạng thái Cyclic StateGraph hoàn chỉnh cho LinTech Content OS:
+Biên dịch đồ thị trạng thái Cyclic StateGraph hoàn chỉnh cho POTA Content OS:
 - Chặng 1: Planning Layer & Human Touchpoint 1 (Duyệt Plan tuần)
 - Chặng 2A: Text Pipeline & Vòng lặp tự sửa bài (Self-Correction Loop: score < 8, max 2 lần)
 - Chặng 2B: Visual Pipeline & Human Touchpoint 2 (Quay Video Raw) & Vòng lặp render lại (max 1 lần)
@@ -49,7 +49,7 @@ from graph.edges import (
 
 
 def create_content_os_graph(checkpointer: Optional[Any] = None) -> Any:
-    """Khởi tạo và biên dịch StateGraph cho LinTech Content OS đầy đủ 16 Agent & 3 Human Touchpoints."""
+    """Khởi tạo và biên dịch StateGraph cho POTA Content OS đầy đủ 16 Agent & 3 Human Touchpoints."""
     builder = StateGraph(ContentOSState)
 
     # 1. Planning Layer Nodes (Chặng 1)

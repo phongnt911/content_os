@@ -1,4 +1,4 @@
-"""Configuration and LLM Instance Management for LinTech Content OS.
+"""Configuration and LLM Instance Management for POTA Content OS.
 
 Manages:
 - Environment variables via python-dotenv.
@@ -247,7 +247,7 @@ class MockStructuredRunnable:
                     VideoSceneItem(
                         scene_number=4,
                         duration_seconds=10,
-                        visual_cue="Creator chỉ tay xuống phần bình luận, xuất hiện logo LinTech",
+                        visual_cue="Creator chỉ tay xuống phần bình luận, xuất hiện logo POTA",
                         voice_prompter="Comment VIDEO để nhận quy trình thiết lập miễn phí ngay hôm nay.",
                     ),
                 ],
@@ -272,13 +272,13 @@ class MockStructuredRunnable:
                 image_approved=True,
                 brand_guidelines_met=True,
                 safe_zone_valid=True,
-                feedback="Ảnh bìa nổi bật, font chữ dễ đọc, màu sắc chuẩn Brand Voice LinTech.",
+                feedback="Ảnh bìa nổi bật, font chữ dễ đọc, màu sắc chuẩn Brand Voice POTA.",
             )
         elif schema_name == "CommunityStrategyResult":
             from core.state import CommentReplyItem
             return self.schema(
                 target_cta_keyword="WORKFLOW",
-                lead_magnet_url="https://lintech.vn/resources/agentic-content-os",
+                lead_magnet_url="https://pota.vn/resources/content-os",
                 seeding_comments=[
                     "Theo anh em thì công đoạn nào trong chuỗi 16 agent này tạo ra nút thắt lớn nhất?",
                     "Bài viết chia sẻ rất thực chiến, mình đã áp dụng và tiết kiệm được 80% thời gian lên bài.",
@@ -287,7 +287,7 @@ class MockStructuredRunnable:
                     CommentReplyItem(
                         intent="Hỏi tài liệu",
                         sample_comment="Bác cho em xin tài liệu workflow với ạ!",
-                        reply_template="Cảm ơn bạn! Mình đã gửi tài liệu chi tiết qua link: https://lintech.vn/resources/agentic-content-os. Chúc bạn ứng dụng thành công!",
+                        reply_template="Cảm ơn bạn! Mình đã gửi tài liệu chi tiết qua link: https://pota.vn/resources/content-os. Chúc bạn ứng dụng thành công!",
                     ),
                     CommentReplyItem(
                         intent="Thắc mắc chi phí & API",
@@ -300,7 +300,7 @@ class MockStructuredRunnable:
             return self.schema(
                 matched_cta="WORKFLOW",
                 sentiment="Tích cực",
-                auto_reply_text="Đã gửi tài liệu vào hòm thư của bạn! Khám phá thêm tại https://lintech.vn/resources/agentic-content-os.",
+                auto_reply_text="Đã gửi tài liệu vào hòm thư của bạn! Khám phá thêm tại https://pota.vn/resources/content-os.",
             )
         elif schema_name == "AnalyticsReportResult":
             return self.schema(

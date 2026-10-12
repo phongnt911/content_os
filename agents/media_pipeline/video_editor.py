@@ -56,7 +56,7 @@ class VideoEditingService:
 
         # Sinh URL video đã render theo convention
         clean_name = raw_footage_url.replace("https://", "").replace("http://", "").replace("/", "_")
-        rendered_url = f"https://cdn.lintech.media/rendered/video_{clean_name[:20]}_final.mp4"
+        rendered_url = f"https://cdn.pota.media/rendered/video_{clean_name[:20]}_final.mp4"
 
         return {
             "rendered_video_url": rendered_url,

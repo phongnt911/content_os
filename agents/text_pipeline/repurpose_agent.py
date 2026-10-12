@@ -12,7 +12,7 @@ from core.state import ContentOSState, RepurposeThreadsResult
 from config import get_llm
 
 
-REPURPOSE_SYSTEM_PROMPT = """Bạn là Agent 7 (Social Repurposing & Threads Master) thuộc LinTech Content OS.
+REPURPOSE_SYSTEM_PROMPT = """Bạn là Agent 7 (Social Repurposing & Threads Master) thuộc POTA Content OS.
 Nhiệm vụ của bạn:
 1. Tiếp nhận bài viết dài đã được làm sạch lỗi (fact_checked_draft).
 2. Tách nhỏ và biên tập lại thành chuỗi từ 3 đến 5 post ngắn trên Threads:
@@ -50,9 +50,12 @@ def repurpose_node(state: ContentOSState) -> Dict[str, Any]:
     
     Nhận `state: ContentOSState`, trả về dictionary cập nhật `threads_posts`.
     """
-    source_draft = state.get("fact_checked_draft") or state.get("raw_draft", "")
-    result = run_repurpose_agent(source_draft)
+    draft = state.get("fact_checked_draft") or state.get("raw_draft", "")
+    if not draft:
+        draft = "Nội dung bài viết ngắn gọn chuẩn bị cho chuỗi bài Threads của POTA."
+
+    result = run_repurpose_agent(draft)
 
     return {
-        "threads_posts": result.threads_posts
+        "threads_posts": result.threads_posts,
     }

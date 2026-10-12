@@ -13,7 +13,7 @@ from core.state import ContentOSState, FactCheckResult
 from config import get_llm
 
 
-FACTCHECK_SYSTEM_PROMPT = """Bạn là Agent 6 (Fact-Checker & Policy Compliance Officer) thuộc LinTech Content OS.
+FACTCHECK_SYSTEM_PROMPT = """Bạn là Agent 6 (Fact-Checker & Policy Compliance Officer) thuộc POTA Content OS.
 Nhiệm vụ của bạn:
 1. Rà soát bài viết (raw_draft):
    - Quét lỗi chính tả, lỗi đánh máy, lỗi diễn đạt câu lủng củng.
@@ -56,8 +56,11 @@ def factcheck_node(state: ContentOSState) -> Dict[str, Any]:
     Nhận `state: ContentOSState`, trả về dictionary cập nhật `fact_checked_draft`.
     """
     raw_draft = state.get("raw_draft", "")
+    if not raw_draft:
+        raw_draft = "Nội dung bài viết mẫu của POTA Content OS."
+
     result = run_factcheck_agent(raw_draft)
 
     return {
-        "fact_checked_draft": result.cleaned_draft or raw_draft
+        "fact_checked_draft": result.cleaned_draft,
     }

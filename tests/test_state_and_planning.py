@@ -177,7 +177,7 @@ def test_planner_agent_execution():
 
     mock_state: ContentOSState = {
         "week_id": "2026-W42",
-        "brand_rules": ["Luôn có CTA hướng độc giả dùng thử LinTech Content OS"],
+        "brand_rules": ["Luôn có CTA hướng độc giả dùng thử POTA Content OS"],
         "trends_feed": trends,
         "content_plan": [],
         "plan_approved": False,

@@ -13,16 +13,17 @@ from core.state import ContentOSState
 from config import get_llm
 
 
-WRITER_SYSTEM_PROMPT = """Bạn là Agent 4 (Master Copywriter & Brand Voice Specialist) thuộc LinTech Content OS.
+WRITER_SYSTEM_PROMPT = """Bạn là Agent 4 (Master Copywriter & Brand Voice Specialist) thuộc POTA Content OS.
 Nhiệm vụ của bạn:
 1. Viết một bài viết hoàn chỉnh chuẩn phong cách Facebook / Blog chuyên sâu dựa trên Dàn ý (Outline) được cung cấp.
 2. Cấu trúc bài viết:
    - Hook mở đầu: Chọn 1 hook cuốn hút nhất từ 3 biến thể trong dàn ý.
    - Thân bài: Đi sâu vào từng luận điểm, dùng ví dụ cụ thể, gạch đầu dòng rõ ràng, ngắt dòng dễ đọc trên thiết bị di động.
    - Kêu gọi hành động (CTA): Khớp với dàn ý, tạo sự tương tác tự nhiên.
-3. Brand Voice:
-   - Chuyên nghiệp, thực chiến, không màu mè sáo rỗng.
+3. Brand Voice của POTA:
+   - Chuyên nghiệp, thực chiến, cuốn hút, giàu giá trị, không sáo rỗng hay lý thuyết suông.
    - Tối ưu nhịp điệu đọc (pacing), tránh những câu quá dài.
+   - Thích ứng với ngành nghề và đối tượng độc giả của bài viết.
 
 Nếu có NHẬN XÉT SỬA BÀI (Feedback) từ reviewer, hãy đọc kỹ và sửa chữa đúng các điểm được yêu cầu."""
 
@@ -58,18 +59,19 @@ Bản thảo trước đó để tham khảo và nâng cấp:
     user_prompt = f"""Hãy viết bài viết hoàn chỉnh dựa trên dàn ý sau:
 Mã chủ đề: {topic_id}
 
-=== DÀN Ý BÀI VIẾT ===
-- Các biến thể Hook gợi ý:
+Các phương án Hook:
 {hooks_str}
-- Các luận điểm thân bài:
+
+Các luận điểm thân bài:
 {body_str}
-- Kêu gọi hành động (CTA): {cta}
 
-=== BRAND RULES ===
-- {rules_str}
+Kêu gọi hành động (CTA):
+{cta}
 {feedback_section}
+Brand Rules cần tuân thủ:
+- {rules_str}
 
-Hãy viết bài viết hoàn chỉnh trực tiếp (bằng tiếng Việt):"""
+Xuất ra toàn văn bài viết hoàn chỉnh bằng tiếng Việt."""
 
     messages = [
         SystemMessage(content=WRITER_SYSTEM_PROMPT),
@@ -77,8 +79,7 @@ Hãy viết bài viết hoàn chỉnh trực tiếp (bằng tiếng Việt):"""
     ]
 
     response = llm.invoke(messages)
-    content = getattr(response, "content", str(response)).strip()
-    return content
+    return str(response.content)
 
 
 def writer_node(state: ContentOSState) -> Dict[str, Any]:
@@ -91,7 +92,7 @@ def writer_node(state: ContentOSState) -> Dict[str, Any]:
     draft_feedback = state.get("draft_feedback")
     previous_draft = state.get("raw_draft")
 
-    draft_text = run_writer_agent(
+    raw_draft = run_writer_agent(
         outline=outline,
         brand_rules=brand_rules,
         draft_feedback=draft_feedback,
@@ -99,5 +100,5 @@ def writer_node(state: ContentOSState) -> Dict[str, Any]:
     )
 
     return {
-        "raw_draft": draft_text
+        "raw_draft": raw_draft,
     }

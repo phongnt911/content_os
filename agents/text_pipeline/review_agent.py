@@ -13,7 +13,7 @@ from core.state import ContentOSState, DraftReviewResult
 from config import get_llm
 
 
-REVIEW_SYSTEM_PROMPT = """Bạn là Agent 5 (Chief Quality Officer & Editor-in-Chief) thuộc LinTech Content OS.
+REVIEW_SYSTEM_PROMPT = """Bạn là Agent 5 (Chief Quality Officer & Editor-in-Chief) thuộc POTA Content OS.
 Nhiệm vụ của bạn:
 1. Đọc kỹ bản thảo bài viết (raw_draft), đối chiếu với dàn ý (outline) và các quy chuẩn thương hiệu (brand_rules).
 2. Chấm điểm bài viết trên thang điểm từ 0 đến 10 (draft_score):
@@ -39,16 +39,16 @@ def run_review_agent(
     rules_str = "\n- ".join(brand_rules) if brand_rules else "Tiêu chuẩn: Hook mạnh, thân bài có số liệu/ví dụ, CTA rõ."
     topic_id = outline.get("topic_id", "N/A")
 
-    user_prompt = f"""Hãy đánh giá và chấm điểm bản thảo bài viết sau đây:
+    user_prompt = f"""Hãy đánh giá và chấm điểm bản thảo bài viết sau:
 Mã chủ đề: {topic_id}
 
-=== BẢN THẢO (RAW DRAFT) ===
+=== BẢN THẢO BÀI VIẾT (RAW DRAFT) ===
 {raw_draft}
 
-=== BRAND RULES CẦN ĐỐI CHIẾU ===
-- {rules_str}
+=== TIÊU CHUẨN THƯƠNG HIỆU (BRAND RULES) ===
+{rules_str}
 
-Hãy thẩm định kỹ lưỡng và xuất ra cấu trúc DraftReviewResult."""
+Hãy chấm điểm công tâm và xuất ra cấu trúc DraftReviewResult hoàn chỉnh."""
 
     messages = [
         SystemMessage(content=REVIEW_SYSTEM_PROMPT),
@@ -62,18 +62,34 @@ Hãy thẩm định kỹ lưỡng và xuất ra cấu trúc DraftReviewResult.""
 def review_node(state: ContentOSState) -> Dict[str, Any]:
     """LangGraph Node tương thích cho Agent 5.
     
-    Nhận `state: ContentOSState`, trả về dictionary cập nhật `draft_score`, `draft_feedback`,
-    và tăng biến đếm `text_revision_count`.
+    Nhận `state: ContentOSState`, trả về dictionary cập nhật:
+    - draft_score
+    - draft_feedback
+    - text_revision_count (tăng thêm 1 nếu điểm < 8)
     """
     raw_draft = state.get("raw_draft", "")
     outline = state.get("outline", {})
     brand_rules = state.get("brand_rules", [])
     current_revisions = state.get("text_revision_count", 0)
 
-    review_result = run_review_agent(raw_draft, outline, brand_rules)
+    result = run_review_agent(
+        raw_draft=raw_draft,
+        outline=outline,
+        brand_rules=brand_rules,
+    )
+
+    new_revision_count = current_revisions
+    if result.draft_score < 8:
+        new_revision_count += 1
+
+    feedback_summary = (
+        f"Điểm số: {result.draft_score}/10.\n"
+        f"Ưu điểm: {', '.join(result.strengths)}\n"
+        f"Cần sửa: {', '.join(result.improvements)}"
+    )
 
     return {
-        "draft_score": review_result.draft_score,
-        "draft_feedback": review_result.draft_feedback,
-        "text_revision_count": current_revisions + 1,
+        "draft_score": result.draft_score,
+        "draft_feedback": feedback_summary,
+        "text_revision_count": new_revision_count,
     }

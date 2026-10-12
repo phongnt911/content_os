@@ -1,4 +1,4 @@
-"""PoTa Content OS - Local Web Dashboard Server.
+"""POTA Content OS - Local Web Dashboard Server.
 
 Khởi chạy máy chủ HTTP phục vụ giao diện Visual Control Board (`ui/`)
 kết nối trực tiếp với LangGraph Cyclic StateGraph qua REST API:
@@ -169,13 +169,13 @@ class ContentOSHTTPHandler(BaseHTTPRequestHandler):
 def start_server(port: int = PORT):
     server = ThreadingHTTPServer(("0.0.0.0", port), ContentOSHTTPHandler)
     print(f"\n=======================================================")
-    print(f"🚀 PoTa Content OS Web Dashboard is RUNNING!")
+    print(f"🚀 POTA Content OS Web Dashboard is RUNNING!")
     print(f"🔗 Mở trình duyệt xem giao diện tại: http://localhost:{port}")
     print(f"=======================================================\n")
     try:
         server.serve_forever()
     except KeyboardInterrupt:
-        print("\nĐã dừng máy chủ PoTa Content OS.")
+        print("\nĐã dừng máy chủ POTA Content OS.")
         server.server_close()
 
 

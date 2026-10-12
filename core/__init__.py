@@ -1,1 +1,1 @@
-"""Core module initialization for LinTech Content OS."""
+"""Core module initialization for POTA Content OS."""

@@ -15,10 +15,10 @@ from core.state import ContentOSState, ImageReviewResult
 from config import get_llm
 
 
-IMAGE_REVIEW_SYSTEM_PROMPT = """Bạn là Agent 13 (Brand Identity & Thumbnail Art Director) thuộc LinTech Content OS.
+IMAGE_REVIEW_SYSTEM_PROMPT = """Bạn là Agent 13 (Brand Identity & Thumbnail Art Director) thuộc POTA Content OS.
 Nhiệm vụ của bạn:
 1. Thẩm định thiết kế ảnh bìa thumbnail:
-   - brand_guidelines_met: True nếu màu sắc, phong cách hình ảnh phù hợp với thương hiệu LinTech.
+   - brand_guidelines_met: True nếu màu sắc, phong cách hình ảnh phù hợp với tiêu chuẩn POTA.
    - safe_zone_valid: True nếu tiêu đề nằm trong vùng an toàn, không bị che bởi avatar, like/share icons.
 2. Đưa ra quyết định:
    - image_approved: True nếu cả 2 tiêu chí trên đều đạt chuẩn.
@@ -35,7 +35,7 @@ def run_review_image_agent(
     llm = get_llm(model_type="fast")
     structured_llm = llm.with_structured_output(ImageReviewResult)
 
-    rules_context = "\n- ".join(brand_rules) if brand_rules else "Gam màu công nghệ hiện đại, độ tương phản cao, chữ dễ đọc."
+    rules_context = "\n- ".join(brand_rules) if brand_rules else "Hình ảnh bắt mắt, độ tương phản cao, chữ dễ đọc trên mobile."
 
     user_prompt = f"""Hãy thẩm định ảnh bìa thumbnail sau:
 - Đường dẫn ảnh: {cover_image_url}
@@ -59,7 +59,7 @@ def review_image_node(state: ContentOSState) -> Dict[str, Any]:
     
     Nhận `state: ContentOSState`, trả về dictionary cập nhật `image_approved` và tăng `image_revision_count`.
     """
-    cover_image_url = state.get("cover_image_url") or "https://cdn.lintech.media/sample_thumb.jpg"
+    cover_image_url = state.get("cover_image_url") or "https://cdn.pota.media/sample_thumb.jpg"
     brand_rules = state.get("brand_rules", [])
     current_revisions = state.get("image_revision_count", 0)
 

@@ -15,13 +15,13 @@ from core.state import ContentOSState, OutlineStructure
 from config import get_llm
 
 
-OUTLINE_SYSTEM_PROMPT = """Bạn là Agent 3 (Content Architect & Outline Specialist) thuộc LinTech Content OS.
+OUTLINE_SYSTEM_PROMPT = """Bạn là Agent 3 (Content Architect & Outline Specialist) thuộc POTA Content OS.
 Nhiệm vụ của bạn:
 1. Phân tích chủ đề (selected_topic) và các quy chuẩn thương hiệu (brand_rules).
 2. Xây dựng dàn ý chi tiết cho bài viết chuyên sâu:
    - topic_id: Mã bài viết tương ứng.
    - hook_variants: Đúng 3 biến thể hook mở bài khác nhau (Ví dụ: 1 hook giật gân/tò mò, 1 hook số liệu nghịch lý, 1 hook câu hỏi trúng pain-point).
-   - body_points: Tối thiểu 3 luận điểm cốt lõi, mạch lạc, dễ hiểu.
+   - body_points: Tối thiểu 3 luận điểm cốt lõi, mạch lạc, dễ hiểu, bám sát ngành nghề của bài viết.
    - call_to_action: Câu CTA rõ ràng, kích thích độc giả bình luận hoặc lưu bài.
 
 Bắt buộc trả về đúng định dạng OutlineStructure."""
@@ -36,8 +36,8 @@ def run_outline_agent(
     structured_llm = llm.with_structured_output(OutlineStructure)
 
     topic_id = selected_topic.get("id", "post_01")
-    angle = selected_topic.get("angle", "Thực chiến công nghệ & AI")
-    hook_concept = selected_topic.get("hook_concept", "Ý tưởng hook mở bài")
+    angle = selected_topic.get("angle", "Chia sẻ giá trị chuyên sâu và thực chiến")
+    hook_concept = selected_topic.get("hook_concept", "Ý tưởng hook mở bài cuốn hút")
     core_message = selected_topic.get("core_message", "Thông điệp cốt lõi")
     target_channel = selected_topic.get("target_channel", "Facebook")
 
@@ -69,13 +69,22 @@ def outline_node(state: ContentOSState) -> Dict[str, Any]:
     
     Nhận `state: ContentOSState`, trả về dictionary cập nhật `outline`.
     """
-    selected_topic = state.get("selected_topic", {})
+    selected_topic = state.get("selected_topic")
     if not selected_topic and state.get("content_plan"):
         selected_topic = state["content_plan"][0]
+    
+    if not selected_topic:
+        selected_topic = {
+            "id": "post_fallback",
+            "angle": "Nội dung chất lượng cao",
+            "hook_concept": "Bí mật đằng sau thành công",
+            "target_channel": "Facebook",
+            "core_message": "Tạo giá trị bền vững",
+        }
 
     brand_rules = state.get("brand_rules", [])
-    outline_result = run_outline_agent(selected_topic, brand_rules)
+    outline = run_outline_agent(selected_topic, brand_rules)
 
     return {
-        "outline": outline_result.model_dump(),
+        "outline": outline.model_dump(),
     }

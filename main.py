@@ -1,4 +1,4 @@
-"""LinTech Content OS - Interactive CLI Runner.
+"""POTA Content OS - Interactive CLI Runner.
 
 CLI tương tác điều khiển chu trình sản xuất và phân phối nội dung tự động:
 - Khởi chạy Cyclic StateGraph & DAG Fork-Join với Checkpointer bộ nhớ.
@@ -16,15 +16,19 @@ from langgraph.types import Command
 from core.state import ContentOSState
 from graph.workflow import create_content_os_graph
 
+# Thiết lập encoding UTF-8 cho console Windows
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+
 
 BANNER = r"""
 ================================================================================
-   _     _       _____           _        ____            _             _       ___  ____  
-  | |   (_)_ __ |_   _|__  ___| |__    / ___|___  _ __ | |_ ___ _ __ | |_   / _ \/ ___| 
-  | |   | | '_ \  | |/ _ \/ __| '_ \  | |   / _ \| '_ \| __/ _ \ '_ \| __| | | | \___ \ 
-  | |___| | | | | | |  __/ (__| | | | | |__| (_) | | | | ||  __/ | | | |_  | |_| |___) |
-  |_____|_|_| |_| |_|\___|\___|_| |_|  \____\___/|_| |_|\__\___|_| |_|\__|  \___/|____/ 
-                                                                                        
+   ____   ___ _____  _      ____ ___  _   _ _____ _____ _   _ _____    ___  ____  
+  |  _ \ / _ \_   _|/ \    / ___/ _ \| \ | |_   _| ____| \ | |_   _|  / _ \/ ___| 
+  | |_) | | | || | / _ \  | |  | | | |  \| | | | |  _| |  \| | | |   | | | \___ \ 
+  |  __/| |_| || |/ ___ \ | |__| |_| | |\  | | | | |___| |\  | | |   | |_| |___) |
+  |_|    \___/ |_/_/   \_\ \____\___/|_| \_| |_| |_____|_| \_| |_|    \___/|____/ 
+                                                                                
          -- Autonomous Multi-Agent Content Production & Distribution System --
 ================================================================================
 """
@@ -54,7 +58,7 @@ def prompt_touchpoint_1(interrupt_data: Dict[str, Any]) -> Command:
     print(f"  [1 - {total_posts}] Chọn bài viết tương ứng để sản xuất video & nội dung ngay")
     print("  [Y]     Duyệt toàn bộ và lấy bài số 1 mặc định")
     print("  [C]     Nhập chủ đề tùy chỉnh mới hoàn toàn (Custom Topic)")
-    print("  [N]     Từ chối kế hoạch (Kết thúc chu trình)")
+    print("  [N]     Từ chối kế hoạch (Chuyển đổi hướng hoặc dừng luồng)")
 
     try:
         raw_choice = input(f"Lựa chọn (1-{total_posts} / Y / C / N, mặc định 1): ").strip()
@@ -65,11 +69,17 @@ def prompt_touchpoint_1(interrupt_data: Dict[str, Any]) -> Command:
 
     if choice in ("n", "no"):
         try:
-            note = input("Lý do từ chối: ").strip()
+            print("\nBạn chưa ưng ý các bài viết trên?")
+            new_direction = input("Nhập chủ đề hoặc góc tiếp cận bạn muốn hướng tới (hoặc nhấn Enter để dừng luồng): ").strip()
         except EOFError:
-            note = "Chủ đề chưa sát mục tiêu"
-        print("[!] Đã từ chối kế hoạch. Luồng sẽ kết thúc.")
-        return Command(resume={"approved": False, "note": note or "User rejected plan"})
+            new_direction = ""
+
+        if new_direction:
+            print(f"[OK] Đã tiếp nhận định hướng mới: '{new_direction}'. POTA sẽ chuyển hướng sản xuất theo chủ đề này!")
+            return Command(resume={"approved": True, "custom_topic": new_direction, "note": f"User topic pivot: {new_direction}"})
+        else:
+            print("[!] Đã dừng luồng theo yêu cầu.")
+            return Command(resume={"approved": False, "note": "User rejected plan and stopped workflow"})
 
     if choice == "c":
         try:
@@ -89,78 +99,88 @@ def prompt_touchpoint_1(interrupt_data: Dict[str, Any]) -> Command:
 
     # Mặc định chọn bài 1
     default_post = content_plan[0] if content_plan else {}
-    print(f"[OK] Kế hoạch đã được phê duyệt! Chọn bài số 1: '{default_post.get('angle')}'")
+    print(f"[OK] Đã chọn bài số 1: '{default_post.get('angle', 'N/A')}'")
     return Command(resume={"approved": True, "selected_index": 0})
 
 
 def prompt_touchpoint_2(interrupt_data: Dict[str, Any]) -> Command:
-    """Tương tác Human Touchpoint 2: Nhận link video raw từ Creator."""
-    print_divider("HUMAN TOUCHPOINT 2: QUAY VIDEO RAW")
-    script = interrupt_data.get("video_script", {})
-    print("Kịch bản video đã được Agent 9 soạn thảo:")
-    print(f"  Thời lượng ước tính: {script.get('total_estimated_duration', 45)}s")
-    print(f"  Hook mở đầu (3s):    \"{script.get('hook_opening', '')}\"")
-    print("  Các phân cảnh:")
-    for scene in script.get("scenes", []):
-        print(f"    - Cảnh {scene.get('scene_number')} ({scene.get('duration_seconds')}s):")
-        print(f"      Visual:   {scene.get('visual_cue')}")
-        print(f"      Prompter: \"{scene.get('voice_prompter')}\"")
-    print(f"  CTA kết video:       \"{script.get('cta_closing', '')}\"")
-    print()
+    """Tương tác Human Touchpoint 2: Nhận link video thô sau khi Creator quay xong."""
+    print_divider("HUMAN TOUCHPOINT 2: NẠP VIDEO FOOTAGE THÔ (CREATOR ACTION)")
+    video_script = interrupt_data.get("video_script", {})
+    hook = interrupt_data.get("hook_opening", "")
+    scenes = video_script.get("scenes", [])
+    cta = video_script.get("cta_closing", "")
 
-    print("Hướng dẫn: Creator vui lòng đọc kịch bản, quay clip và dán link Google Drive video thô.")
+    print(f"Hook mở đầu 3s: \"{hook}\"")
+    print(f"Tổng số phân cảnh: {len(scenes)}")
+    for s in scenes:
+        print(f"  [Cảnh {s.get('scene_number', '?')}] ({s.get('duration_seconds', 0)}s):")
+        print(f"    - Visual: {s.get('visual_cue')}")
+        print(f"    - Voice:  \"{s.get('voice_prompter')}\"")
+    print(f"CTA kết: \"{cta}\"\n")
+
+    print("[*] Vui lòng quay video theo kịch bản trên và tải lên Google Drive / Server.")
     try:
-        url_input = input("Nhập URL Video thô (Nhấn Enter để dùng video mẫu demo): ").strip()
+        raw_url = input("Dán URL video thô (nhấn Enter để dùng link mẫu demo): ").strip()
     except EOFError:
-        url_input = ""
+        raw_url = ""
 
-    default_url = "https://drive.google.com/file/d/creator_raw_footage_1080p/view"
-    chosen_url = url_input if url_input else default_url
-    print(f"[OK] Đã tiếp nhận video: {chosen_url}")
-    print("[*] Agent 10 đang cắt dựng, ghép sub và B-roll...")
-    return Command(resume={"raw_footage_url": chosen_url})
+    footage_url = raw_url if raw_url else "https://drive.google.com/file/d/sample_footage_creator_1080p/view"
+    print(f"[OK] Đã nhận video footage: {footage_url}")
+    return Command(resume={"raw_footage_url": footage_url})
 
 
 def prompt_touchpoint_3(interrupt_data: Dict[str, Any]) -> Command:
-    """Tương tác Human Touchpoint 3: Phê duyệt trọn gói Final Package."""
-    print_divider("HUMAN TOUCHPOINT 3: DUYỆT TRỌN GÓI NỘI DUNG (FINAL PACKAGE)")
-    print(f"Chu kỳ duyệt hiện tại: {interrupt_data.get('cycle_count')}/{interrupt_data.get('max_cycles_allowed')}")
-    print("\n--- 1. BÀI VIẾT FACEBOOK ---")
-    draft = interrupt_data.get("text_draft", "")
-    print(draft[:400] + ("..." if len(draft) > 400 else ""))
+    """Tương tác Human Touchpoint 3: Phê duyệt trọn bộ gói ấn phẩm trước khi xuất bản."""
+    print_divider("HUMAN TOUCHPOINT 3: PHÊ DUYỆT TRỌN BỘ ẤN PHẨM TRƯỚC XUẤT BẢN")
+    pkg = interrupt_data.get("package", {})
 
-    print(f"\n--- 2. CHUỖI BÀI THREADS ({len(interrupt_data.get('threads_posts', []))} POSTS) ---")
-    for p in interrupt_data.get("threads_posts", [])[:3]:
-        print(f"  - {p}")
+    print(f"[1] Bài viết Facebook (Score: {pkg.get('draft_score')}/10):")
+    draft_preview = pkg.get("article_draft", "")
+    print(f"    {draft_preview[:300]}...\n")
 
-    print(f"\n--- 3. BỘ SLIDE CAROUSEL: {interrupt_data.get('carousel_slides_count')} trang ---")
-    print(f"--- 4. VIDEO RENDER: {interrupt_data.get('rendered_video_url')} ({interrupt_data.get('video_duration_seconds')}s) ---")
-    print(f"--- 5. THUMBNAIL COVER: {interrupt_data.get('cover_image_url')} ---")
+    threads = pkg.get("threads_posts", [])
+    print(f"[2] Chuỗi bài Threads ({len(threads)} posts):")
+    for idx, tp in enumerate(threads[:2], 1):
+        print(f"    Post {idx}: {tp}")
+    if len(threads) > 2:
+        print(f"    ... và {len(threads) - 2} post khác.")
+    print()
 
-    print("\nQuyết định của bạn:")
-    print("  [Y] Phê duyệt xuất bản ngay (Kích hoạt Agent 14, 15, 16)")
-    print("  [R] Yêu cầu chỉnh sửa lại")
+    slides = pkg.get("carousel_slides", [])
+    print(f"[3] Kịch bản Carousel ({len(slides)} slides):")
+    for idx, sl in enumerate(slides[:2], 1):
+        print(f"    Slide {idx}: {sl.get('headline')} | Visual: {sl.get('visual_layout_tip')}")
+    print()
+
+    print(f"[4] Video ngắn đã dựng: {pkg.get('rendered_video_url')} ({pkg.get('video_duration')}s)")
+    print(f"[5] Ảnh bìa Thumbnail:   {pkg.get('cover_image_url')}\n")
+
+    print("Quyết định phê duyệt:")
+    print("  [Y] Duyệt trọn gói & Bắt đầu Xuất bản đa kênh ngay")
+    print("  [R] Yêu cầu chỉnh sửa lại (Kèm ghi chú phản hồi)")
 
     try:
         choice = input("Lựa chọn (Y/R, mặc định Y): ").strip().lower()
     except EOFError:
         choice = "y"
 
-    if choice in ("r", "revise"):
+    if choice == "r":
         try:
-            note = input("Góp ý chỉnh sửa (nội dung hoặc video): ").strip()
+            note = input("Nhập ghi chú yêu cầu chỉnh sửa: ").strip()
         except EOFError:
-            note = "Sửa lại mở bài cho giật tò mò hơn"
-        return Command(resume={"approved": False, "note": note or "Chỉnh sửa lại nội dung"})
+            note = "Cần tinh chỉnh lại hook cho hấp dẫn hơn"
+        print(f"[!] Yêu cầu chỉnh sửa: '{note}'. Đồ thị sẽ quay lại bước cải thiện...")
+        return Command(resume={"approved": False, "note": note})
 
-    print("[OK] Đã duyệt trọn bộ gói ấn phẩm! Bắt đầu bắn API xuất bản đa kênh...")
+    print("[OK] Đã phê duyệt trọn gói! Bắt đầu phát hành tự động đa nền tảng...")
     return Command(resume={"approved": True})
 
 
 def run_interactive_content_os(auto_approve: bool = False) -> None:
-    """Chạy toàn bộ chu trình LinTech Content OS với tương tác dòng lệnh."""
+    """Chạy toàn bộ chu trình POTA Content OS với tương tác dòng lệnh."""
     print(BANNER)
-    print("Đang khởi tạo LinTech Content OS Cyclic StateGraph...")
+    print("Đang khởi tạo POTA Content OS Cyclic StateGraph...")
 
     app = create_content_os_graph()
     thread_id = f"content_os_session_{int(time.time())}"
@@ -170,7 +190,7 @@ def run_interactive_content_os(auto_approve: bool = False) -> None:
         "week_id": f"2026-W{time.strftime('%U')}",
         "brand_rules": [
             "Brand Voice: Thực chiến, tốc độ, giải quyết triệt để bài toán kinh doanh",
-            "Mỗi bài viết phải giải phóng thời gian cho solopreneur và tech team",
+            "Mỗi bài viết phải giải phóng thời gian và gia tăng giá trị cho độc giả",
         ],
         "trends_feed": [],
         "content_plan": [],
@@ -214,7 +234,7 @@ def run_interactive_content_os(auto_approve: bool = False) -> None:
                 }
                 print(f"[OK] Đã thiết lập chủ đề trọng tâm: '{user_topic_seed}'")
             else:
-                print("[*] Không nhập chủ đề riêng -> AI sẽ tự động quét radar đối thủ...")
+                print("[*] Không nhập chủ đề riêng -> AI sẽ tự động quét radar đa ngành...")
         except EOFError:
             pass
 
@@ -287,11 +307,12 @@ def run_interactive_content_os(auto_approve: bool = False) -> None:
         for metric_name, val in metrics.items():
             print(f"    - {metric_name:22}: {val}")
 
-    print("\n[+] Bộ quy tắc thương hiệu đã được bổ sung bài học mới:")
-    for rule in final_values.get("brand_rules", []):
-        print(f"    * {rule}")
+    if final_values.get("brand_rules"):
+        print("\n[+] Bộ quy tắc thương hiệu đã được bổ sung bài học mới:")
+        for rule in final_values.get("brand_rules", []):
+            print(f"    * {rule}")
 
-    print("\n[SUCCESS] LinTech Content OS đã thực thi xuất sắc toàn bộ quy trình 16 Agents!")
+    print("\n[SUCCESS] POTA Content OS đã thực thi xuất sắc chu trình sản xuất nội dung!")
 
 
 if __name__ == "__main__":
