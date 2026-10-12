@@ -20,13 +20,16 @@ Nhiệm vụ của bạn:
 2. Xây dựng ma trận kế hoạch nội dung hàng tuần gồm từ 5 đến 7 bài viết đa kênh, bám sát ngành nghề và đối tượng độc giả mục tiêu của chủ đề.
 3. Mỗi bài viết bắt buộc phải có cấu trúc brief rõ ràng:
    - id: 'post_01', 'post_02', ...
-   - angle: Góc tiếp cận độc đáo, đánh trúng pain-point hoặc kỳ vọng của độc giả trong lĩnh vực đó.
-   - hook_concept: Ý tưởng hook mở bài có tính tò mò, bất ngờ hoặc tương phản cao.
+   - angle: Góc tiếp cận độc đáo, đúng ngữ cảnh thực tế của đề tài.
+   - hook_concept: Ý tưởng hook mở bài có tính tò mò, bất ngờ hoặc kích thích độc giả phù hợp với đề tài.
    - target_channel: Kênh phân phối chính (Facebook, TikTok, Threads, Shorts, YouTube...).
    - target_audience: Chân dung đối tượng độc giả mục tiêu phù hợp với ngành.
-   - core_message: Giá trị thực tiễn rút ra được sau bài viết.
-4. Đảm bảo sự phân bổ cân bằng giữa các định dạng: bài sâu chuyên môn, bài chia sẻ kinh nghiệm thực tế, bài truyền cảm hứng và bài giới thiệu giải pháp/sản phẩm.
-5. Tuyệt đối không gượng ép công nghệ hay AI nếu chủ đề thuộc lĩnh vực khác (như F&B, thời trang, bất động sản, lối sống, giáo dục, tài chính...).
+   - core_message: Giá trị thực tiễn hoặc cảm xúc rút ra được sau bài viết.
+4. NGUYÊN TẮC QUAN TRỌNG VỀ GIỌNG ĐIỆU & NGỮ CẢNH:
+   - Nếu chủ đề về NÔNG SẢN / ẨM THỰC / ĐẶC SẢN (ví dụ: xoài Cam Lâm, sầu riêng, cà phê, bún chả...):
+     + Hook và Góc bài phải tự nhiên, khơi gợi cảm giác ngon miệng, tò mò về nguồn gốc, mẹo chọn quả ngon, bảo quản, công thức chế biến hoặc câu chuyện người nông dân.
+     + TUYỆT ĐỐI KHÔNG dùng các hook kinh doanh sáo rỗng (cấm dùng: "tại sao người giỏi nhất không chăm chỉ nhất", "đột phá 30 ngày", "đòn bẩy 80/20", "tối ưu ROI").
+   - Nếu chủ đề về KINH DOANH / NGHỀ NGHIỆP: Mới dùng các hook về tối ưu thời gian, chi phí và hiệu suất.
 
 Bắt buộc trả về đúng định dạng WeeklyContentPlan."""
 
@@ -41,13 +44,12 @@ def run_planner_agent(
     llm = get_llm(model_type="core")
     structured_llm = llm.with_structured_output(WeeklyContentPlan)
 
-    # Format bối cảnh từ trends_feed
     trends_context = "\n".join([
         f"- [{t.get('id', 'N/A')}] {t.get('topic', 'Chủ đề')} (Nguồn: {t.get('source_radar', 'Radar')}): {t.get('trend_summary', '')}"
         for t in trends_feed
     ]) if trends_feed else "Chưa có trends_feed. Tự đề xuất các góc bài mang lại giá trị cao nhất cho độc giả."
 
-    rules_context = "\n".join([f"- {r}" for r in brand_rules]) if brand_rules else "Tập trung giá trị thực tiễn, không lý thuyết suông."
+    rules_context = "\n".join([f"- {r}" for r in brand_rules]) if brand_rules else "Tập trung giá trị thực tế, tự nhiên, đúng ngữ cảnh đề tài."
     focus_instruction = f"\n=== CHỦ ĐỀ TRỌNG TÂM DO USER YÊU CẦU ===\nToàn bộ hoặc ít nhất 2-3 bài viết trong ma trận bắt buộc phải khai thác chuyên sâu về: '{focus_topic}'\n" if focus_topic else ""
 
     user_prompt = f"""Hãy lập ma trận kế hoạch nội dung tuần {week_id} gồm từ 5 đến 7 bài viết.
@@ -57,6 +59,8 @@ def run_planner_agent(
 
 === BRAND RULES CẦN TUÂN THỦ ===
 {rules_context}
+
+LƯU Ý: Đặt Hook và Angle phải hoàn toàn phù hợp với bản chất chủ đề '{focus_topic or 'Đa ngành'}', văn phong thuần Việt, tự nhiên và gần gũi.
 
 Hãy xuất ra cấu trúc WeeklyContentPlan hoàn chỉnh."""
 

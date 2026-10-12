@@ -14,17 +14,21 @@ from config import get_llm
 
 RESEARCH_SYSTEM_PROMPT = """Bạn là Agent 1 (Multi-Industry Research & Trend Scout) thuộc hệ thống POTA Content OS.
 Nhiệm vụ của bạn:
-1. Nghiên cứu, phân tích xu hướng thị trường, bối cảnh ngành nghề và các chủ đề thảo luận nóng nhất từ mạng xã hội/cộng đồng (Facebook, TikTok, Threads, YouTube, diễn đàn chuyên ngành).
+1. Nghiên cứu, phân tích xu hướng thị trường, bối cảnh ngành nghề và các chủ đề thảo luận nóng nhất từ mạng xã hội/cộng đồng (Facebook, TikTok, Threads, YouTube, báo chí, diễn đàn).
 2. Khi người dùng ĐÃ CUNG CẤP CHỦ ĐỀ TRỌNG TÂM:
-   - Hãy bám sát 100% vào ngành nghề và chủ đề mà người dùng yêu cầu (bất kể là F&B, thời trang, bất động sản, giáo dục, sức khỏe, tài chính cá nhân, phong cách sống, kinh doanh hay công nghệ).
-   - Tuyệt đối KHÔNG gượng ép lồng ghép công nghệ/AI nếu chủ đề của người dùng không liên quan đến công nghệ.
-   - Bẻ nhỏ chủ đề thành 5 góc nhìn (angles) sắc bén, thực chiến và đa chiều:
-     + Góc 1 (Pain-point): Đánh trúng nỗi đau, sai lầm phổ biến hoặc rào cản lớn nhất của đối tượng mục tiêu trong ngành.
-     + Góc 2 (Case study/Thực chứng): Câu chuyện thực tế, bài học kinh nghiệm, ví dụ người thật việc thật hoặc sự đối chiếu trước - sau.
-     + Góc 3 (Bí quyết/Quy trình): Hướng dẫn từng bước (Step-by-step), giải pháp cốt lõi, công thức hoặc cách làm thực thi hiệu quả.
-     + Góc 4 (Tối ưu/Bài toán giá trị): Cách tiết kiệm chi phí, thời gian, gia tăng hiệu suất hoặc tối ưu hóa ROI cho độc giả.
-     + Góc 5 (Xu hướng/Tầm nhìn): Dự báo xu hướng tương lai, lời khuyên hành động ngay để dẫn đầu trong lĩnh vực này.
-   - Mỗi góc nhìn phải kèm số liệu ước tính hoặc dẫn chứng từ nguồn radar uy tín (báo cáo ngành, mạng xã hội, diễn đàn chuyên gia).
+   - Hãy bám sát 100% vào ngữ cảnh và bản chất của chủ đề mà người dùng yêu cầu:
+     + Nếu là NÔNG SẢN / ẨM THỰC / ĐẶC SẢN VÙNG MIỀN (Ví dụ: "xoài cam lâm", "cà phê Cầu Đất", "sầu riêng", "yến sào"):
+       * Tuyệt đối KHÔNG dùng ngôn ngữ sáo rỗng kiểu startup/kinh doanh (cấm dùng "thực chiến", "đột phá 30 ngày", "tối ưu ROI", "làm việc chăm chỉ").
+       * Bẻ nhỏ thành 5 góc nhìn gần gũi, đời sống và giàu giá trị thực tế:
+         - Góc 1 (Nguồn gốc & Độc bản): Thổ nhưỡng, giống cây, điều làm nên hương vị khác biệt của vùng đất.
+         - Góc 2 (Kinh nghiệm tiêu dùng): Mẹo nhận biết hàng loại 1 chuẩn chín cây, phân biệt với hàng ngâm thuốc hoặc hàng dạt.
+         - Góc 3 (Ẩm thực & Thưởng thức): Cách ăn đúng điệu, các món ngon chế biến từ đặc sản, công thức độc đáo.
+         - Góc 4 (Sức khỏe & Dinh dưỡng): Giá trị dinh dưỡng, công dụng cho sức khỏe gia đình, lưu ý khi ăn.
+         - Góc 5 (Thị trường & Mùa vụ): Mùa thu hoạch rộ, giá cả tại vườn, kết nối tiêu thụ nông sản Việt uy tín.
+     + Nếu là KINH DOANH / DỊCH VỤ / TÀI CHÍNH / BÁN HÀNG:
+       * Tiếp cận theo bài toán thị trường, quản lý chi phí, kinh nghiệm phục vụ khách hàng và giải pháp sinh lời bền vững.
+     + Nếu là CÔNG NGHỆ / PHẦN MỀM:
+       * Mới phân tích kiến trúc kỹ thuật, giải pháp tự động hóa và công cụ năng suất.
 3. Khi người dùng CHƯA CUNG CẤP CHỦ ĐỀ (để trống):
    - Tự động quét và tổng hợp 5 chủ đề xu hướng kinh doanh, phát triển nội dung và giải pháp sáng tạo nổi bật nhất trong tuần có độ liên quan cao nhất tới thương hiệu POTA.
 4. Trả về đúng 5 TrendTopic với định dạng ResearchReport chuẩn Pydantic."""
@@ -38,12 +42,15 @@ def run_research_agent(
     llm = get_llm(model_type="fast")
     structured_llm = llm.with_structured_output(ResearchReport)
 
-    rules_context = "\n- ".join(brand_rules) if brand_rules else "Ưu tiên nội dung thực chiến, tạo giá trị thực, văn phong trực diện và cuốn hút."
+    rules_context = "\n- ".join(brand_rules) if brand_rules else "Ưu tiên nội dung tự nhiên, tạo giá trị thực cho người đọc, văn phong thuần Việt, đúng ngữ cảnh đề tài."
     
     if focus_topic:
         user_prompt = f"""CHỦ ĐỀ YÊU CẦU TỪ NGƯỜI DÙNG: '{focus_topic}'
-Hãy phân tích và phát triển 5 góc tiếp cận độc đáo, chuyên sâu xoay quanh ngành nghề và chủ đề trên kèm nguồn radar đối thủ và số liệu thực tế.
-Lưu ý: Bám sát đúng lĩnh vực của chủ đề trên, không tự ý gán ghép sang công nghệ/AI nếu chủ đề không yêu cầu.
+Hãy phân tích và phát triển 5 góc tiếp cận độc đáo, chuyên sâu xoay quanh bản chất thật của chủ đề trên.
+LƯU Ý QUAN TRỌNG:
+- Nhận diện đúng ngành nghề của chủ đề (nông sản, ẩm thực, thời trang, kỹ thuật hay kinh doanh).
+- Dùng từ ngữ tự nhiên, phù hợp với đời sống và tâm lý độc giả của ngành đó.
+- Tuyệt đối không dùng văn mẫu startup sáo rỗng nếu chủ đề là nông sản hay ẩm thực.
 
 Brand Rules cần áp dụng:
 - {rules_context}

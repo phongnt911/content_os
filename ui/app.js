@@ -1,17 +1,19 @@
 /**
  * POTA Content OS - Visual Workflow Controller (app.js)
  * Điều khiển trạng thái thời gian thực của 16 Agents & 3 Human Touchpoints
- * Hỗ trợ đa ngành nghề (Industry-Agnostic) & Xử lý tương tác Human-in-the-loop hoàn chỉnh
+ * Hỗ trợ đa ngành nghề (Industry-Agnostic) & Kết nối trực tiếp LangGraph / Gemini Backend
  */
 
 let workflowState = {
     isRunning: false,
+    isBackendConnected: false,
     currentTouchpoint: null,
     activeAgentsCount: 0,
     currentTopic: "",
     planItems: [],
     selectedPlanIndex: 0,
     chosenArticle: null,
+    backendSnapshot: null,
     stateData: {}
 };
 
@@ -100,7 +102,7 @@ function sleep(ms) {
 }
 
 // ==========================================================================
-// HỦY / DỪNG LUỒNG HOÀN TOÀN (FIX LỖI TỪ CHỐI NHƯNG VẪN THỂ HIỆN ĐANG CHẠY)
+// HỦY / DỪNG LUỒNG HOÀN TOÀN
 // ==========================================================================
 function abortWorkflow(reason = "Người dùng đã từ chối kế hoạch") {
     closeModal("modalTouchpoint1");
@@ -154,82 +156,182 @@ async function handleStartWorkflow() {
         });
         if (res.ok) {
             const data = await res.json();
-            logMessage("Đã kết nối trực tiếp StateGraph Backend!", "success");
-            runConnectedBackendWorkflow(topicInput);
+            workflowState.isBackendConnected = true;
+            workflowState.backendSnapshot = data;
+            logMessage("Đã kết nối trực tiếp StateGraph Backend & Gemini LLM!", "success");
+            await runConnectedBackendWorkflow(data, topicInput);
             return;
         }
     } catch (e) {
-        // Fallback: Tự động chạy Smart Simulation Engine trực quan trên Client
+        logMessage("Không phát hiện máy chủ backend, chuyển sang Smart Client Engine...", "info");
     }
 
-    logMessage("Kích hoạt Visual Engine trực quan trên giao diện...", "info");
+    workflowState.isBackendConnected = false;
     runSmartSimulation(topicInput);
 }
 
 // ==========================================================================
-// THÍCH ỨNG ĐA NGÀNH (INDUSTRY-AGNOSTIC PLAN GENERATOR)
+// KẾT NỐI VỚI BACKEND STATGRAPH & GEMINI THẬT
+// ==========================================================================
+async function runConnectedBackendWorkflow(backendData, customTopic) {
+    updateActiveCount(2);
+    setNodeRunning("research");
+    logMessage(`[Agent 01: Research] Quét radar chuyên sâu xoay quanh: "${customTopic || 'Đa ngành'}"...`, "info");
+    await sleep(1000);
+    setNodeDone("research");
+
+    setNodeRunning("planner");
+    logMessage("[Agent 02: Planner] Lập ma trận kế hoạch tuần từ trí tuệ nhân tạo Gemini...", "info");
+    await sleep(1000);
+    setNodeDone("planner");
+
+    updateActiveCount(0);
+
+    // LẤY DỮ LIỆU THẬT DO GEMINI SINH RA:
+    const rawItems = (backendData && backendData.values && backendData.values.content_plan) ? backendData.values.content_plan : [];
+    if (rawItems.length > 0) {
+        workflowState.planItems = rawItems.map(item => ({
+            id: item.id || "post_01",
+            channel: item.target_channel || "Facebook",
+            angle: item.angle || "Chủ đề bài viết",
+            hook: item.hook_concept || "Ý tưởng mở bài cuốn hút",
+            core: item.core_message || "Thông điệp cốt lõi"
+        }));
+        logMessage(`[Backend] Nhận thành công ${rawItems.length} bài viết do Gemini LLM thiết lập chuẩn xác theo đề tài!`, "success");
+    } else {
+        workflowState.planItems = generateDynamicPlan(customTopic);
+    }
+
+    workflowState.selectedPlanIndex = 0;
+
+    const tp1El = document.getElementById("node-touchpoint-1");
+    if (tp1El) tp1El.classList.add("waiting");
+    logMessage("[TOUCHPOINT 1] Đã nhận kế hoạch từ AI! Chờ bạn phê duyệt...", "warn");
+
+    openTouchpoint1Modal();
+}
+
+// ==========================================================================
+// THÍCH ỨNG ĐA NGÀNH (CHUẨN XÁC, TỰ NHIÊN, KHÔNG VĂN MẪU SÁO RỖNG)
 // ==========================================================================
 function generateDynamicPlan(customTopic) {
     const raw = (customTopic || "").toLowerCase();
-    const displayTopic = customTopic || "Chiến lược kinh doanh & Tăng trưởng số";
+    const displayTopic = customTopic || "Đặc sản & Văn hóa ẩm thực Việt Nam";
 
-    if (raw.includes("ẩm thực") || raw.includes("f&b") || raw.includes("quán") || raw.includes("cà phê") || raw.includes("món ăn")) {
+    // 1. NÔNG SẢN / TRÁI CÂY / ẨM THỰC / ĐẶC SẢN VÙNG MIỀN (Ví dụ: xoài cam lâm, sầu riêng, cà phê, yến sào...)
+    if (raw.includes("xoài") || raw.includes("cam lâm") || raw.includes("nông sản") || raw.includes("trái cây") || 
+        raw.includes("đặc sản") || raw.includes("sầu riêng") || raw.includes("ẩm thực") || raw.includes("món ăn") || 
+        raw.includes("quán") || raw.includes("cà phê") || raw.includes("f&b")) {
         return [
-            { id: "post_01", channel: "Facebook", angle: `Góc tài chính F&B: 3 sai lầm khiến 80% quán lỗ trong 6 tháng đầu`, hook: "Đừng mở quán chỉ vì thích, nếu chưa nắm công thức cost 30% này!", core: "Quản trị dòng tiền và tỷ lệ giá vốn chuẩn xác cho quán" },
-            { id: "post_02", channel: "TikTok", angle: `Case Study: Kéo 500 khách/ngày cho quán ăn nhờ video trải nghiệm hậu trường`, hook: "Quán vắng tanh thành kín bàn chỉ sau 1 tuần đổi cách quay clip", core: "Cách làm video chân thực thu hút thực khách địa phương" },
-            { id: "post_03", channel: "Threads", angle: `Nghịch lý phục vụ: Khách hàng không nhớ món ngon, họ nhớ cảm xúc`, hook: "Tại sao khách sẵn sàng trả gấp đôi cho cùng 1 ly cà phê?", core: "Bí quyết tạo trải nghiệm khách hàng vượt trội" },
-            { id: "post_04", channel: "Shorts", angle: `Quy trình kiểm soát nguyên liệu tươi ngon không tồn kho`, hook: "Cách chủ quán cắt giảm 20% lãng phí thực phẩm mỗi ngày", core: "Công thức nhập hàng theo định mức bán thực tế" }
+            { 
+                id: "post_01", 
+                channel: "Facebook", 
+                angle: `Góc nguồn gốc & thổ nhưỡng: Điều gì tạo nên vị ngọt thanh độc bản của ${displayTopic}?`, 
+                hook: `Tại sao cùng một giống quả, nhưng trồng ở vùng đất này lại có hương vị thơm ngon đặc biệt đến vậy?`, 
+                core: `Khám phá câu chuyện thổ nhưỡng, nguồn gốc xuất xứ và niềm tự hào nông sản địa phương` 
+            },
+            { 
+                id: "post_02", 
+                channel: "TikTok", 
+                angle: `Mẹo nhà vườn: Cách nhận biết ${displayTopic} chín cây tự nhiên loại 1`, 
+                hook: `Đi chợ hoặc đặt mua online, nhớ kiểm tra ngay 3 dấu hiệu phân biệt này kẻo mua phải hàng ngâm thuốc!`, 
+                core: `Kinh nghiệm chọn quả tươi ngon, chuẩn sạch an toàn cho cả gia đình` 
+            },
+            { 
+                id: "post_03", 
+                channel: "Threads", 
+                angle: `Văn hóa thưởng thức & chế biến món ngon từ ${displayTopic}`, 
+                hook: `Bạn đã thử kết hợp ${displayTopic} theo công thức độc đáo này chưa? Ngon bất ngờ!`, 
+                core: `Gợi ý cách ăn ngon đúng điệu, biến tấu món tráng miệng hấp dẫn` 
+            },
+            { 
+                id: "post_04", 
+                channel: "Shorts", 
+                angle: `Mùa thu hoạch rộ & Kết nối tiêu thụ nông sản Việt`, 
+                hook: `Mùa thu hoạch rộ đã về, tận mắt ngắm nhìn những vườn ${displayTopic} trĩu quả tràn ngập sức sống!`, 
+                core: `Lan tỏa hình ảnh đẹp về người nông dân và cầu nối nông sản sạch đến người tiêu dùng` 
+            }
         ];
-    } else if (raw.includes("thời trang") || raw.includes("quần áo") || raw.includes("outfit") || raw.includes("mặc")) {
+    } 
+    // 2. THỜI TRANG & LỐI SỐNG
+    else if (raw.includes("thời trang") || raw.includes("quần áo") || raw.includes("outfit") || raw.includes("mặc")) {
         return [
             { id: "post_01", channel: "Facebook", angle: `Bí quyết xây dựng tủ đồ Capsule Wardrobe 10 món phối 30 ngày`, hook: "Tủ đồ chật ních nhưng mỗi sáng bạn vẫn không có gì để mặc?", core: "Tối ưu chi phí trang phục và định hình phong cách cá nhân" },
-            { id: "post_02", channel: "TikTok", angle: `3 lỗi phối đồ khiến người thấp bị dìm dáng mà 90% người mắc phải`, hook: "Chỉ cần đổi cách sơ vin này, nhìn bạn sẽ cao thêm 5cm ngay lập tức!", core: "Quy tắc tỷ lệ vàng 1/3 trong phối đồ thường ngày" },
-            { id: "post_03", channel: "Threads", angle: `Tư duy mua sắm thông minh: Đừng mua theo trend, hãy tính Cost-Per-Wear`, hook: "Một chiếc áo 2 triệu có thể rẻ hơn chiếc áo 200k!", core: "Cách đầu tư thông minh vào chất lượng trang phục" },
-            { id: "post_04", channel: "Shorts", angle: `Bảo quản trang phục cao cấp đúng cách tại nhà`, hook: "Sai lầm khi giặt giũ đang âm thầm phá hủy đồ đắt tiền của bạn", core: "Mẹo kéo dài tuổi thọ chất liệu vải lụa và len" }
+            { id: "post_02", channel: "TikTok", angle: `3 lỗi phối đồ khiến người thấp bị dìm dáng mà 90% người mắc phải`, hook: "Chỉ cần đổi cách sơ vin này, nhìn bạn sẽ thanh thoát và cao ráo hơn ngay!", core: "Quy tắc tỷ lệ vàng trong phối đồ thường ngày" },
+            { id: "post_03", channel: "Threads", angle: `Tư duy mua sắm thông minh: Đừng mua theo trend, hãy tính Cost-Per-Wear`, hook: "Tại sao một món đồ chất lượng cao lại giúp bạn tiết kiệm tiền hơn đồ rẻ tiền nhanh hỏng?", core: "Cách đầu tư thông minh vào chất lượng trang phục" },
+            { id: "post_04", channel: "Shorts", angle: `Bảo quản trang phục bền đẹp như mới tại nhà`, hook: "Sai lầm khi giặt giũ đang âm thầm làm bay màu và xơ vải đồ yêu thích của bạn", core: "Mẹo kéo dài tuổi thọ trang phục hàng ngày" }
         ];
-    } else if (raw.includes("bất động sản") || raw.includes("nhà") || raw.includes("đất") || raw.includes("căn hộ")) {
+    } 
+    // 3. BẤT ĐỘNG SẢN & NHÀ ĐẤT
+    else if (raw.includes("bất động sản") || raw.includes("nhà") || raw.includes("đất") || raw.includes("căn hộ")) {
         return [
-            { id: "post_01", channel: "Facebook", angle: `Bẫy pháp lý khi mua nhà lần đầu và cách kiểm tra quy hoạch an toàn`, hook: "Đừng vội đặt cọc tiền tỷ nếu chưa xem 3 loại giấy tờ này!", core: "Quy trình thẩm định pháp lý và tránh tranh chấp quy hoạch" },
-            { id: "post_02", channel: "TikTok", angle: `Bài toán đòn bẩy tài chính: Khi nào nên vay mua nhà?`, hook: "Vay 70% mua nhà: Đòn bẩy làm giàu hay chiếc thòng lọng nợ nần?", core: "Nguyên tắc an toàn không để tiền trả lãi vượt quá 40% thu nhập" },
-            { id: "post_03", channel: "Threads", angle: `Kinh nghiệm chọn căn hộ chung cư không bao giờ mất giá`, hook: "Những chi tiết nhỏ khi đi xem nhà giúp bạn tránh mua phải căn lỗi", core: "Tiêu chí vị trí, ban quản lý và thiết kế phong thủy thông gió" },
-            { id: "post_04", channel: "Shorts", angle: `Dự báo chu kỳ thị trường bất động sản thời gian tới`, hook: "Dòng tiền thông minh đang dịch chuyển về phân khúc nào?", core: "Nhận diện thời điểm gom hàng và giữ tiền mặt" }
+            { id: "post_01", channel: "Facebook", angle: `Kiểm tra pháp lý an toàn khi mua bất động sản lần đầu`, hook: "Đừng vội đặt cọc nếu chưa kiểm tra kỹ 3 loại giấy tờ quy hoạch này!", core: "Quy trình thẩm định pháp lý và tránh tranh chấp rủi ro" },
+            { id: "post_02", channel: "TikTok", angle: `Bài toán đòn bẩy tài chính: Khi nào nên vay mua nhà?`, hook: "Vay mua nhà: Đòn bẩy sở hữu tổ ấm hay áp lực nợ nần vượt tầm kiểm soát?", core: "Nguyên tắc an toàn không để tiền trả nợ vượt quá 40% thu nhập" },
+            { id: "post_03", channel: "Threads", angle: `Kinh nghiệm chọn căn hộ thực tế từ người trong ngành`, hook: "Những chi tiết nhỏ khi đi xem nhà giúp bạn tránh mua phải căn bị lỗi phong thủy hoặc ngấm dột", core: "Tiêu chí vị trí, tiện ích và ban quản lý vận hành" },
+            { id: "post_04", channel: "Shorts", angle: `Dự báo chu kỳ và nhịp sóng thị trường`, hook: "Dòng tiền thông minh đang ưu tiên phân khúc nào trong năm nay?", core: "Nhận diện thời điểm an toàn để an cư và tích lũy tài sản" }
         ];
-    } else if (raw.includes("tài chính") || raw.includes("tiền") || raw.includes("đầu tư") || raw.includes("chi tiêu")) {
+    } 
+    // 4. TÀI CHÍNH CÁ NHÂN & CHI TIÊU
+    else if (raw.includes("tài chính") || raw.includes("tiền") || raw.includes("đầu tư") || raw.includes("chi tiêu")) {
         return [
-            { id: "post_01", channel: "Facebook", angle: `Phương pháp phân bổ tài chính 50/30/20 cho người trẻ dưới 30 tuổi`, hook: "Lương 20 triệu nhưng cuối tháng vẫn hết sạch tiền đi đâu?", core: "Kiểm soát chi tiêu vô thức và xây dựng quỹ dự phòng 6 tháng" },
-            { id: "post_02", channel: "TikTok", angle: `Sai lầm đầu tư đu đỉnh: Tâm lý FOMO và cách trị dứt điểm`, hook: "Cứ mua là giảm, vừa bán thì tăng: Bạn có thấy quen không?", core: "Kỷ luật quản trị rủi ro và đầu tư định kỳ dài hạn" },
-            { id: "post_03", channel: "Threads", angle: `Sức mạnh của lãi kép: Bắt đầu sớm quan trọng hơn bắt đầu nhiều`, hook: "1 triệu đồng mỗi tháng từ năm 20 tuổi sẽ biến thành bao nhiêu năm 40 tuổi?", core: "Tận dụng đòn bẩy thời gian trong tích lũy tài sản" },
-            { id: "post_04", channel: "Shorts", angle: `Cách thoát khỏi bẫy nợ thẻ tín dụng lãi suất cao`, hook: "Ngân hàng kiếm tiền từ bạn như thế nào qua chiếc thẻ tín dụng?", core: "Chiến lược thanh toán dứt điểm dư nợ thông minh" }
+            { id: "post_01", channel: "Facebook", angle: `Phương pháp phân bổ tài chính 50/30/20 đơn giản, dễ áp dụng`, hook: "Thu nhập đều đặn nhưng cuối tháng vẫn không thấy tiền tích lũy ở đâu?", core: "Kiểm soát chi tiêu vô thức và xây dựng quỹ dự phòng an tâm" },
+            { id: "post_02", channel: "TikTok", angle: `Tâm lý chi tiêu theo cảm xúc và cách trị dứt điểm`, hook: "Có bao giờ bạn mua sắm chỉ vì buồn chán rồi về nhà lại hối hận không?", core: "Quy tắc trì hoãn 48 giờ trước khi quẹt thẻ mua sắm" },
+            { id: "post_03", channel: "Threads", angle: `Sức mạnh của kỷ luật tích lũy nhỏ mỗi ngày`, hook: "Tiết kiệm 50k mỗi ngày: Tưởng ít nhưng sau 5 năm sẽ mang lại điều bất ngờ gì?", core: "Xây dựng thói quen tài chính lành mạnh, bền bỉ" },
+            { id: "post_04", channel: "Shorts", angle: `Tránh bẫy tín dụng và lãi suất ẩn`, hook: "Sử dụng thẻ tín dụng thông minh để nhận ưu đãi mà không bị tính lãi", core: "Chiến lược quản trị hạn mức và thanh toán đúng hạn" }
         ];
-    } else {
-        // Đa ngành tổng quát / Chuyên sâu theo chủ đề nhập
+    } 
+    // 5. TỔNG QUÁT TỰ NHIÊN (Áp dụng cho mọi chủ đề khác)
+    else {
         return [
-            { id: "post_01", channel: "Facebook", angle: `Góc chuyên sâu: Giải mã bí quyết thực chiến về ${displayTopic}`, hook: `90% mọi người đang hiểu sai về "${displayTopic}" và cái giá phải trả...`, core: `Bản chất cốt lõi và phương pháp tiếp cận đúng đắn về ${displayTopic}` },
-            { id: "post_02", channel: "TikTok", angle: `Case Study: Cách tạo đột phá với ${displayTopic} trong 30 ngày`, hook: `Tôi đã thay đổi hoàn toàn kết quả như thế nào nhờ áp dụng bí quyết này?`, core: `Quy trình thực tế từng bước (Step-by-Step) mang lại kết quả rõ rệt` },
-            { id: "post_03", channel: "Threads", angle: `Nghịch lý: Làm ít hơn nhưng đạt hiệu quả cao hơn với ${displayTopic}`, hook: `Tại sao người giỏi nhất thường không phải người làm việc chăm chỉ nhất?`, core: `Tối ưu hóa đòn bẩy và tập trung vào 20% hành động tạo 80% kết quả` },
-            { id: "post_04", channel: "Shorts", angle: `Sai lầm đắt giá cần tránh ngay lập tức khi triển khai ${displayTopic}`, hook: `Dừng lại ngay nếu bạn đang làm theo cách này!`, core: `Cảnh báo rủi ro thực tế và hướng dẫn giải pháp thay thế an toàn` }
+            { 
+                id: "post_01", 
+                channel: "Facebook", 
+                angle: `Góc nhìn toàn cảnh & Bản chất cốt lõi về ${displayTopic}`, 
+                hook: `Những điều quan trọng nhất về "${displayTopic}" mà người mới bắt đầu thường bỏ lỡ...`, 
+                core: `Hiểu đúng bản chất để đưa ra quyết định sáng suốt và tiết kiệm thời gian` 
+            },
+            { 
+                id: "post_02", 
+                channel: "TikTok", 
+                angle: `Hướng dẫn thực tế: Kinh nghiệm chọn lọc và mẹo hay về ${displayTopic}`, 
+                hook: `Nếu bạn đang quan tâm đến ${displayTopic}, lưu lại ngay 3 kinh nghiệm cực kỳ hữu ích này!`, 
+                core: `Bài học thực tiễn giúp bạn tiếp cận vấn đề dễ dàng và hiệu quả nhất` 
+            },
+            { 
+                id: "post_03", 
+                channel: "Threads", 
+                angle: `Góc nhìn đa chiều & Trải nghiệm thực tế xoay quanh ${displayTopic}`, 
+                hook: `Sự khác biệt lớn nhất giữa cách tiếp cận truyền thống và phương pháp mới về ${displayTopic}...`, 
+                core: `Góc nhìn mới mẻ, thúc đẩy thảo luận tích cực và văn minh` 
+            },
+            { 
+                id: "post_04", 
+                channel: "Shorts", 
+                angle: `Tóm tắt nhanh những điều nên làm và nên tránh về ${displayTopic}`, 
+                hook: `Trước khi bắt tay vào thực hiện ${displayTopic}, hãy chắc chắn bạn đã biết điều này!`, 
+                core: `Hướng dẫn súc tích, dễ nhớ và ứng dụng được ngay` 
+            }
         ];
     }
 }
 
 // ==========================================================================
-// CLIENT SIMULATION ENGINE
+// CLIENT SIMULATION ENGINE (KHI CHẠY OFFLINE)
 // ==========================================================================
 async function runSmartSimulation(customTopic) {
     updateActiveCount(2);
     setNodeRunning("research");
-    logMessage(`[Agent 01: Research] Quét radar thảo luận & đối thủ xoay quanh: "${customTopic || 'Xu hướng đa ngành'}"...`, "info");
-    await sleep(1400);
+    logMessage(`[Agent 01: Research] Quét radar thảo luận & cộng đồng xoay quanh: "${customTopic || 'Chủ đề tuần'}"...`, "info");
+    await sleep(1200);
     setNodeDone("research");
 
     setNodeRunning("planner");
-    logMessage("[Agent 02: Planner] Thiết lập ma trận kế hoạch tuần gồm 4-7 góc bài chuyên sâu...", "info");
-    await sleep(1400);
+    logMessage("[Agent 02: Planner] Phân tích ngữ cảnh và thiết lập ma trận 4 góc bài chuyên sâu...", "info");
+    await sleep(1200);
     setNodeDone("planner");
 
     updateActiveCount(0);
 
-    // Chuẩn bị ma trận bài viết cho Touchpoint 1
     workflowState.planItems = generateDynamicPlan(customTopic);
     workflowState.selectedPlanIndex = 0;
 
@@ -244,7 +346,7 @@ async function runSmartSimulation(customTopic) {
 // TOUCHPOINT 1 MODAL CONTROLLER
 // ==========================================================================
 function openTouchpoint1Modal() {
-    togglePlanRejectView(false); // Đảm bảo mở ở chế độ xem bình thường
+    togglePlanRejectView(false);
     const list = document.getElementById("planCardsList");
     list.innerHTML = "";
 
@@ -276,7 +378,6 @@ function selectPlanCard(idx) {
     });
 }
 
-// Chuyển đổi giữa Chế độ xem bài và Chế độ hỏi ngược lại nhu cầu đề tài
 function togglePlanRejectView(showRefine) {
     const selView = document.getElementById("planSelectionView");
     const refView = document.getElementById("planRejectRefineView");
@@ -288,7 +389,6 @@ function togglePlanRejectView(showRefine) {
         refView.style.display = "block";
         normFooter.style.display = "none";
         refFooter.style.display = "flex";
-        // Focus vào ô nhập nhu cầu
         setTimeout(() => {
             const input = document.getElementById("refinedTopicInput");
             if (input) input.focus();
@@ -301,7 +401,6 @@ function togglePlanRejectView(showRefine) {
     }
 }
 
-// Người dùng nhập chủ đề mới và yêu cầu lập lại kế hoạch chuẩn xác hơn
 async function submitReplanWithNewTopic() {
     const refinedTopic = document.getElementById("refinedTopicInput").value.trim();
     if (!refinedTopic) {
@@ -313,25 +412,37 @@ async function submitReplanWithNewTopic() {
     const tp1El = document.getElementById("node-touchpoint-1");
     if (tp1El) tp1El.classList.remove("waiting");
 
-    // Cập nhật lại thanh input trên cùng
     document.getElementById("topicInput").value = refinedTopic;
     workflowState.currentTopic = refinedTopic;
 
     logMessage(`[CHUYỂN HƯỚNG ĐỀ TÀI] Tiếp nhận yêu cầu: "${refinedTopic}". POTA quét radar và lập lại kế hoạch...`, "system");
 
-    // Chạy lại Agent 1 và Agent 2
+    // Thử gọi lại backend nếu có kết nối
+    if (workflowState.isBackendConnected) {
+        try {
+            const res = await fetch("/api/start", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ focus_topic: refinedTopic })
+            });
+            if (res.ok) {
+                const data = await res.json();
+                runConnectedBackendWorkflow(data, refinedTopic);
+                return;
+            }
+        } catch (e) {}
+    }
+
     runSmartSimulation(refinedTopic);
 }
 
-// Người dùng phê duyệt bài viết đã chọn
 async function submitTouchpoint1(isApproved) {
     closeModal("modalTouchpoint1");
     const tp1El = document.getElementById("node-touchpoint-1");
     if (tp1El) tp1El.classList.remove("waiting");
 
     if (!isApproved) {
-        // Đã được togglePlanRejectView xử lý, nếu gọi vào đây thì dừng an toàn
-        abortWorkflow("Bạn đã từ chối kế hoạch");
+        abortWorkflow("Bạn đã từ chối kế hoạch tuần");
         return;
     }
 
@@ -340,7 +451,7 @@ async function submitTouchpoint1(isApproved) {
         id: "post_custom",
         channel: "Facebook",
         angle: customVal,
-        hook: `Sự thật đằng sau: ${customVal}`,
+        hook: `Khám phá câu chuyện đằng sau: ${customVal}`,
         core: customVal
     } : workflowState.planItems[workflowState.selectedPlanIndex];
 
@@ -349,7 +460,23 @@ async function submitTouchpoint1(isApproved) {
     logMessage(`[Touchpoint 1] Phê duyệt thành công! Triển khai bài: "${chosenPost.angle}"`, "success");
     setNodeDone("node-touchpoint-1");
 
-    // Rẽ nhánh song song 2 dây chuyền!
+    // Nếu có backend, gửi thông báo resume
+    if (workflowState.isBackendConnected) {
+        try {
+            fetch("/api/touchpoint/resume", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    resume: {
+                        approved: true,
+                        selected_index: workflowState.selectedPlanIndex,
+                        custom_topic: customVal || undefined
+                    }
+                })
+            });
+        } catch (e) {}
+    }
+
     updateActiveCount(2);
     runParallelPipelines(chosenPost);
 }
@@ -360,7 +487,6 @@ async function submitTouchpoint1(isApproved) {
 async function runParallelPipelines(chosenPost) {
     logMessage("[FORK] Đồ thị rẽ nhánh song song: Dây chuyền Chữ & Dây chuyền Video bắt đầu cùng lúc!", "system");
 
-    // Nhánh Chữ: Dàn ý & Nhánh Video: Kịch bản
     setNodeRunning("generate_outline");
     setNodeRunning("generate_video_script");
     logMessage(`[Agent 03: Outline] Thiết kế dàn ý 3 hook & luận điểm cho "${chosenPost.channel}"...`, "info");
@@ -369,12 +495,10 @@ async function runParallelPipelines(chosenPost) {
     setNodeDone("generate_outline");
     setNodeDone("generate_video_script");
 
-    // Nhánh Video tạm dừng chờ Creator quay raw footage tại Touchpoint 2
     const tp2El = document.getElementById("node-touchpoint-2");
     if (tp2El) tp2El.classList.add("waiting");
     logMessage("[TOUCHPOINT 2] Kịch bản video đã xong! Chờ Creator quay video footage...", "warn");
 
-    // Trong khi đó nhánh Chữ vẫn tiếp tục chạy độc lập:
     setNodeRunning("writer");
     logMessage("[Agent 04: Writer] Chấp bút bài viết hoàn chỉnh chuẩn phong cách POTA...", "info");
     await sleep(1500);
@@ -401,7 +525,6 @@ async function runParallelPipelines(chosenPost) {
     setNodeDone("generate_carousel");
     logMessage("[Dây chuyền Chữ] ĐÃ HOÀN TẤT VÀ VỀ ĐÍCH! Sẵn sàng hội tụ...", "success");
 
-    // Bật modal Touchpoint 2 để creator nạp clip
     openTouchpoint2Modal(chosenPost);
 }
 
@@ -417,18 +540,18 @@ function openTouchpoint2Modal(post) {
         scenesEl.innerHTML = `
             <div class="script-scene-item">
                 <div class="scene-num">Cảnh 1 (0-3s)</div>
-                <div class="scene-desc"><strong>Visual:</strong> Creator nhìn thẳng ống kính, biểu cảm ngạc nhiên / chỉ tay nhấn mạnh.</div>
+                <div class="scene-desc"><strong>Visual:</strong> Creator nhìn thẳng ống kính, biểu cảm hào hứng / cầm sản phẩm thực tế trên tay.</div>
                 <div class="scene-voice"><strong>Voice:</strong> "${post.hook}"</div>
             </div>
             <div class="script-scene-item">
                 <div class="scene-num">Cảnh 2 (4-25s)</div>
-                <div class="scene-desc"><strong>Visual:</strong> Chèn B-roll minh họa / bảng biểu dẫn chứng cụ thể.</div>
-                <div class="scene-voice"><strong>Voice:</strong> "Vấn đề là 90% mọi người đang tiếp cận sai cách. Bản chất ở đây là ${post.core}..."</div>
+                <div class="scene-desc"><strong>Visual:</strong> Cận cảnh chi tiết / chia sẻ thực tế trải nghiệm và kinh nghiệm hữu ích.</div>
+                <div class="scene-voice"><strong>Voice:</strong> "Nhiều người thường không để ý chi tiết này, nhưng chính nó quyết định ${post.core}..."</div>
             </div>
             <div class="script-scene-item">
                 <div class="scene-num">Cảnh 3 (26-45s)</div>
                 <div class="scene-desc"><strong>Visual:</strong> Creator mỉm cười, chỉ tay xuống phần bình luận. Xuất hiện logo POTA.</div>
-                <div class="scene-voice"><strong>Voice:</strong> "Comment từ khóa 'CHI TIẾT' bên dưới để nhận tài liệu hướng dẫn đầy đủ nhé!"</div>
+                <div class="scene-voice"><strong>Voice:</strong> "Bình luận bên dưới nếu bạn muốn biết thêm thông tin chi tiết nhé!"</div>
             </div>
         `;
     }
@@ -445,7 +568,6 @@ async function submitTouchpoint2() {
     const url = document.getElementById("rawFootageInput").value.trim() || "https://drive.google.com/sample_footage.mp4";
     logMessage(`[Touchpoint 2] Đã nạp footage video thô: ${url}`, "success");
 
-    // Tiếp tục nhánh Video: Dựng & Review
     updateActiveCount(2);
     setNodeRunning("video_editing");
     logMessage("[Agent 10: Video Editor] Tự động cắt khoảng lặng, tạo phụ đề động và ghép nhạc nền...", "info");
@@ -479,42 +601,42 @@ async function submitTouchpoint2() {
 }
 
 // ==========================================================================
-// TOUCHPOINT 3 MODAL (DUYỆT TRỌN BỘ ẤN PHẨM TRƯỚC XUẤT BẢN)
+// TOUCHPOINT 3 MODAL (DUYỆT TRỌN BỘ ẤN PHẨM)
 // ==========================================================================
 function openTouchpoint3Modal() {
     const post = workflowState.chosenArticle || {
-        angle: "Chiến lược nội dung thực chiến",
-        hook: "Đừng làm theo cách cũ nếu không muốn tụt lại phía sau",
-        core: "Tập trung vào giá trị cốt lõi"
+        angle: "Khám phá câu chuyện đặc sản",
+        hook: "Điều gì làm nên hương vị đặc biệt mà vùng khác khó sánh bằng?",
+        core: "Chất lượng chuẩn sạch và giá trị văn hóa vùng miền"
     };
 
     document.getElementById("previewDraftText").innerText = 
-`🚀 ${post.hook.toUpperCase()}!
+`🌿 ${post.hook.toUpperCase()}!
 
-Bạn có nhận ra sự thật cay đắng này:
-Đa phần mọi người tốn hàng chục tiếng mỗi tuần nhưng kết quả vẫn giậm chân tại chỗ vì thiếu một quy trình thực thi chuẩn mực.
+Có một sự thật thú vị là:
+Không phải ngẫu nhiên mà thức quà này lại được nhiều người yêu thích và săn đón đến vậy.
 
-Đó là lý do POTA Content OS đồng hành cùng bạn:
-1. Xác định đúng điểm nghẽn và nỗi đau thực tế của độc giả.
-2. Cung cấp giải pháp rõ ràng, đo lường được và áp dụng được ngay: ${post.core}.
-3. Tối ưu hóa chuỗi phân phối đa kênh để tối đa hóa độ phủ sóng.
+Hôm nay hãy cùng POTA tìm hiểu kỹ hơn:
+1. Nguồn gốc xuất xứ và điều kiện tự nhiên đặc ân cho hương vị đậm đà khó quên.
+2. Cách phân biệt hàng loại 1 chuẩn vị gốc so với hàng trôi nổi kém chất lượng.
+3. Bí quyết bảo quản và gợi ý món ngon để thưởng thức trọn vẹn nhất: ${post.core}.
 
-👉 Comment ngay từ khóa "CHI TIẾT" bên dưới để nhận tài liệu phân tích chuyên sâu hoàn toàn miễn phí!`;
+👉 Bình luận ngay bên dưới chia sẻ cảm nhận của bạn nhé!`;
 
     document.getElementById("previewThreadsList").innerHTML = `
         <div class="log-line">1/ ${post.hook}.</div>
-        <div class="log-line">2/ Sai lầm phổ biến nhất: Cố làm tất cả một mình mà không có hệ thống hỗ trợ.</div>
-        <div class="log-line">3/ Giải pháp: Áp dụng nguyên lý cốt lõi: ${post.core}.</div>
-        <div class="log-line">4/ Kết quả: Tiết kiệm 80% thời gian mà chất lượng nội dung vượt trội.</div>
-        <div class="log-line">5/ Bạn nghĩ sao về góc nhìn này? Thảo luận bên dưới nhé!</div>
+        <div class="log-line">2/ Điểm đặc biệt nhất: Hương vị tự nhiên không thể pha lẫn.</div>
+        <div class="log-line">3/ Mẹo nhỏ khi chọn mua: Luôn chú ý vào nguồn gốc và độ tươi mới.</div>
+        <div class="log-line">4/ Ý nghĩa: ${post.core}.</div>
+        <div class="log-line">5/ Bạn đã từng thưởng thức chưa? Chia sẻ trải nghiệm bên dưới nhé!</div>
     `;
 
     document.getElementById("previewCarouselSlides").innerHTML = `
         <div class="log-line">● Slide 1: ${post.hook}</div>
-        <div class="log-line">● Slide 2: Vấn đề 90% người gặp phải</div>
-        <div class="log-line">● Slide 3: Giải pháp cốt lõi: ${post.core}</div>
-        <div class="log-line">● Slide 4: 3 bước hành động ngay hôm nay</div>
-        <div class="log-line">● Slide 5: Lưu lại bài viết nếu bạn thấy hữu ích!</div>
+        <div class="log-line">● Slide 2: Nguồn gốc và vùng đất đặc ân</div>
+        <div class="log-line">● Slide 3: 3 mẹo chọn chuẩn ngon loại 1</div>
+        <div class="log-line">● Slide 4: Hướng dẫn bảo quản tươi lâu</div>
+        <div class="log-line">● Slide 5: Lưu lại bài viết hữu ích này nhé!</div>
     `;
 
     document.getElementById("previewCoverHeadline").innerText = post.hook.slice(0, 35).toUpperCase();
@@ -539,7 +661,6 @@ async function submitTouchpoint3(isApproved) {
         const note = document.getElementById("revisionNoteInput").value.trim() || "Chỉnh sửa hoàn thiện";
         logMessage(`[Touchpoint 3] Yêu cầu chỉnh sửa: "${note}". Chuyển lại cho Writer & Video Editor...`, "warn");
         
-        // Giả lập sửa nhanh
         setNodeRunning("writer");
         await sleep(1000);
         setNodeDone("writer");
@@ -561,12 +682,12 @@ async function submitTouchpoint3(isApproved) {
     logMessage("  + Shorts:   https://youtube.com/shorts/31ad0e", "success");
 
     setNodeRunning("comment_manager");
-    logMessage("[Agent 15: Community] Kịch bản phản hồi tự động CTA và seeding chuyên môn đã kích hoạt!", "info");
+    logMessage("[Agent 15: Community] Kịch bản phản hồi tự động và seeding thảo luận đã sẵn sàng!", "info");
     await sleep(1300);
     setNodeDone("comment_manager");
 
     setNodeRunning("analytics_learner");
-    logMessage("[Agent 16: Analytics] Tổng kết số liệu: 145,000 lượt xem, 185 lượt chuyển đổi thành công.", "info");
+    logMessage("[Agent 16: Analytics] Tổng kết số liệu: 145,000 lượt xem, 185 phản hồi tích cực.", "info");
     await sleep(1500);
     setNodeDone("analytics_learner");
 
@@ -574,10 +695,9 @@ async function submitTouchpoint3(isApproved) {
     setNodeDone("node-brain-update");
     setNodeDone("node-continuous-growth");
 
-    logMessage("[HOÀN TẤT] Brand Brain đã tự động cập nhật bài học chiến thắng vào Bộ quy chuẩn!", "success");
+    logMessage("[HOÀN TẤT] Brand Brain đã tự động cập nhật bài học thành công vào Bộ quy chuẩn!", "success");
     logMessage("🎉 POTA Content OS đã hoàn thành xuất sắc 100% chu trình tuần!", "success");
 
-    // Khôi phục nút chạy
     workflowState.isRunning = false;
     const btn = document.getElementById("btnStartFlow");
     if (btn) {
