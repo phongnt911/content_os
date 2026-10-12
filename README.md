@@ -171,6 +171,40 @@ Quy trình dòng lệnh:
 
 ---
 
+## 🎁 Kết Quả Sau Khi Chạy Toàn Bộ Hệ Thống (Deliverables)
+
+Khi hoàn thành trọn vẹn 1 chu trình sản xuất nội dung tuần qua POTA Content OS, bạn sẽ nhận được **4 gói kết quả đầu ra hoàn chỉnh**:
+
+### 1. Gói Nội Dung Chữ & Kịch Bản Đa Nền Tảng (Text Deliverables)
+- **Bài viết chuyên sâu Facebook:** Bản thảo hoàn chỉnh đã qua kiểm duyệt chính tả, ngữ pháp, độ tương phản lập luận và chính sách phân phối (đạt điểm QA $\ge 8/10$).
+- **Chuỗi bài viết Threads (3 - 5 posts):** Tách nhỏ luận điểm súc tích, định dạng ngắn gọn, tối ưu thói quen đọc lướt trên thiết bị di động.
+- **Kịch bản Carousel Slides (5 - 7 trang):** Từng slide có tiêu đề giật tít (headline), nội dung đúc kết và gợi ý bố cục thị giác (visual layout tips).
+
+### 2. Gói Ấn Phẩm Video Ngắn & Ảnh Bìa (Visual & Media Deliverables)
+- **Kịch bản Video Dọc 9:16 (30 - 50s):** Chia rõ 3 phân cảnh (Hook 3s đầu $\to$ Luận điểm cốt lõi $\to$ CTA), bao gồm cả **lời thoại máy nhắc chữ (prompter)** và **chỉ dẫn diễn xuất/B-roll**.
+- **Video Ngắn Hoàn Thiện:** Video dọc 9:16 đã auto-cut khoảng lặng thừa, chèn phụ đề tự động (auto-sub động) và ghép nhạc nền theo nhịp điệu.
+- **Ảnh Bìa Thumbnail:** Thiết kế an toàn theo tỉ lệ 3:4 và 9:16 (Safe-zone compliant, độ tương phản cao, nổi bật tiêu đề).
+
+### 3. Kết Quả Xuất Bản Đa Nền Tảng Đồng Bộ (Multi-Channel Publishing)
+- **Liên kết bài đăng đồng bộ:** Hệ thống cập nhật trường `published_links` gồm 4 đường link phát hành tương ứng cho Facebook, TikTok, Threads, YouTube Shorts.
+- **Lưu ý quan trọng về Sandbox vs Live Fanpage:**
+  - *Mặc định (Sandbox Mode):* Hệ thống sinh ra các đường link cấu trúc chuẩn (Canonical Mock URLs với mã băm hash duy nhất) để kiểm thử toàn diện luồng dữ liệu mà không làm phiền tài khoản mạng xã hội cá nhân của bạn. Khi click trực tiếp các link này trên trình duyệt sẽ báo 404 vì chưa gắn Token thật.
+  - *Chuyển sang đăng thật (Live Mode):* Khi bạn sẵn sàng phát hành thực tế, chỉ cần nạp Token vào `agents/operations/publisher_agent.py` (Meta Graph API `PAGE_ACCESS_TOKEN`, TikTok API `TIKTOK_ACCESS_TOKEN`, hoặc chỉ 1 khóa `AYRSHARE_API_KEY` để đăng đồng loạt 4 nền tảng).
+
+### 4. Báo Cáo Đo Lường Tuần & "Brand Brain" Tự Thông Minh Hơn
+- **Bảng số liệu đo lường hiệu quả (Metrics):** Lượt tiếp cận (Reach), lượt xem video (Views), tỷ lệ giữ chân người xem (Retention Rate), số lượng bình luận chuyển đổi (CTA Comments), và khách hàng tiềm năng (Leads).
+- **Góc nội dung chiến thắng (Winning Angles):** Phân tích AI chỉ ra góc tiếp cận nào thu hút tương tác tốt nhất trong tuần.
+- **Cơ chế "Brand Brain" tự học:** Agent 16 tự động đúc rút các bài học kinh nghiệm và nạp thẳng vào **Bộ quy tắc thương hiệu (Brand Rules)** qua LangGraph reducer `operator.add`. Chu trình các tuần kế tiếp sẽ tự động áp dụng các bài học này để viết bài và dựng video hiệu quả hơn.
+
+#### 📍 Vị trí xem Báo cáo & Brand Brain:
+- **Trên Web UI Dashboard (`http://localhost:8080`):**
+  - Sau khi duyệt qua Touchpoint 3, hệ thống sẽ **tự động bung Modal "BÁO CÁO ĐO LƯỜNG HIỆU QUẢ TUẦN & BRAND BRAIN"** ngay giữa màn hình.
+  - Bạn cũng có thể **click chuột trực tiếp vào node `Agent 16: Phân tích`** hoặc **`Brand Brain tự cập nhật`** trên sơ đồ luồng (ở **Hàng 5 - Chặng 5 "Mỗi tuần"**) bất cứ lúc nào để xem lại.
+- **Trên Terminal CLI (`python main.py`):**
+  - Được in ra trực tiếp dưới dạng bảng báo cáo ở cuối màn hình sau khi hoàn thành chu trình.
+
+---
+
 ### 3. Chạy tự động không dừng (Demo CI/CD)
 Dùng để chạy thử nghiệm nhanh toàn bộ quy trình mà không cần con người tương tác:
 ```bash

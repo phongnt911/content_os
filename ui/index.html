@@ -364,7 +364,7 @@
 
                     <div class="nodes-track">
                         <!-- Số liệu cuối tuần -->
-                        <div class="agent-node node-static" id="node-metrics-feed">
+                        <div class="agent-node node-static" id="node-metrics-feed" style="cursor: pointer;" onclick="openAnalyticsReportModal()">
                             <div class="node-icon">📈</div>
                             <div class="node-content">
                                 <span class="node-title">Số liệu cuối tuần</span>
@@ -374,7 +374,7 @@
                         <div class="arrow-connector">→</div>
 
                         <!-- Agent 16: Phân tích -->
-                        <div class="agent-node" id="node-analytics">
+                        <div class="agent-node" id="node-analytics" style="cursor: pointer;" onclick="openAnalyticsReportModal()">
                             <div class="node-badge">Agent 16</div>
                             <div class="node-icon">🧠</div>
                             <div class="node-content">
@@ -386,7 +386,7 @@
                         <div class="arrow-connector">→</div>
 
                         <!-- Bộ nhận diện thương hiệu tự cập nhật -->
-                        <div class="agent-node node-brain" id="node-brain-update">
+                        <div class="agent-node node-brain" id="node-brain-update" style="cursor: pointer;" onclick="openAnalyticsReportModal()">
                             <div class="node-icon">💡</div>
                             <div class="node-content">
                                 <span class="node-title">Brand Brain tự cập nhật</span>
@@ -595,6 +595,127 @@
             <div class="modal-footer">
                 <button class="btn-warning" onclick="submitTouchpoint3(false)">↩ Yêu cầu chỉnh sửa lại</button>
                 <button class="btn-success" onclick="submitTouchpoint3(true)">🚀 Phê duyệt xuất bản đa kênh ngay!</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MODAL BÁO CÁO ĐO LƯỜNG TUẦN & BRAND BRAIN ================= -->
+    <div class="modal-overlay" id="modalAnalyticsReport">
+        <div class="modal-box modal-xl">
+            <div class="modal-header">
+                <div class="modal-badge">🧠 AGENT 16 & OPERATIONS</div>
+                <h3>BÁO CÁO ĐO LƯỜNG HIỆU QUẢ TUẦN & "BRAND BRAIN" TỰ CẢI TIẾN</h3>
+                <button class="modal-close-btn" onclick="closeModal('modalAnalyticsReport')">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="analytics-tabs-nav">
+                    <button class="tab-btn active" id="btnTabOverview" onclick="switchAnalyticsTab('overview')">📊 Số liệu đo lường tuần</button>
+                    <button class="tab-btn" id="btnTabBrain" onclick="switchAnalyticsTab('brain')">💡 Brand Brain thông minh hơn</button>
+                    <button class="tab-btn" id="btnTabLinks" onclick="switchAnalyticsTab('links')">🚀 Liên kết xuất bản đa kênh</button>
+                </div>
+
+                <div class="analytics-tab-contents">
+                    <!-- Tab 1: Số liệu đo lường tuần -->
+                    <div class="analytics-pane active" id="pane-an-overview">
+                        <div class="metrics-kpi-grid">
+                            <div class="kpi-card">
+                                <span class="kpi-label">Facebook Tiếp cận</span>
+                                <span class="kpi-value" id="kpiFbReach">12,500</span>
+                                <span class="kpi-sub">142 lượt chia sẻ bài</span>
+                            </div>
+                            <div class="kpi-card">
+                                <span class="kpi-label">TikTok Lượt xem</span>
+                                <span class="kpi-value text-green" id="kpiTiktokViews">85,000</span>
+                                <span class="kpi-sub">Giữ chân người xem: 42%</span>
+                            </div>
+                            <div class="kpi-card">
+                                <span class="kpi-label">YouTube Shorts</span>
+                                <span class="kpi-value" id="kpiShortsViews">32,000</span>
+                                <span class="kpi-sub">Lượt xem hoàn tất cao</span>
+                            </div>
+                            <div class="kpi-card">
+                                <span class="kpi-label">Threads Impressions</span>
+                                <span class="kpi-value" id="kpiThreadsViews">18,200</span>
+                                <span class="kpi-sub">Tương tác thảo luận tự nhiên</span>
+                            </div>
+                            <div class="kpi-card highlight-card">
+                                <span class="kpi-label">Bình luận CTA</span>
+                                <span class="kpi-value text-orange" id="kpiCtaComments">210</span>
+                                <span class="kpi-sub">Agent 15 tự động phản hồi</span>
+                            </div>
+                            <div class="kpi-card highlight-card">
+                                <span class="kpi-label">Leads Chuyển đổi</span>
+                                <span class="kpi-value text-purple" id="kpiLeads">94</span>
+                                <span class="kpi-sub">Khách hàng để lại thông tin</span>
+                            </div>
+                        </div>
+
+                        <div class="winning-angles-box">
+                            <h4>🏆 GÓC NỘI DUNG CHIẾN THẮNG (WINNING ANGLES):</h4>
+                            <div id="winningAnglesList" class="winning-angles-content">
+                                • Góc phân tích chuyên sâu & trải nghiệm thực tế đạt chỉ số giữ chân người xem cao nhất (42%).<br>
+                                • Video dọc dưới 45 giây có tỷ lệ chia sẻ cao hơn 3.2 lần so với bài viết thông thường.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab 2: Brand Brain thông minh hơn -->
+                    <div class="analytics-pane" id="pane-an-brain">
+                        <div class="brain-explanation-banner">
+                            <span class="brain-icon">🧠</span>
+                            <div>
+                                <h4>CƠ CHẾ "BRAND BRAIN" TỰ ĐỘNG THÔNG MINH QUA TỪNG TUẦN:</h4>
+                                <p>Sau mỗi đợt phát hành, Agent 16 sẽ đúc rút các bài học thực chiến thành quy tắc mới và nạp thẳng vào <strong>Bộ quy tắc thương hiệu (Brand Rules)</strong> của POTA qua reducer <code>operator.add</code>. Ở các tuần tiếp theo, các Agent Viết bài (Writer) và Dựng video sẽ tự động áp dụng các bài học này.</p>
+                            </div>
+                        </div>
+
+                        <div class="brand-rules-comparison">
+                            <div class="rules-column">
+                                <h5>📌 Quy tắc thương hiệu cốt lõi ban đầu:</h5>
+                                <ul id="originalBrandRulesList" class="rules-list">
+                                    <li>Brand Voice: Thực chiến, tốc độ, giải quyết triệt để bài toán kinh doanh và đời sống.</li>
+                                    <li>Mỗi bài viết phải giải phóng thời gian và gia tăng giá trị thiết thực cho độc giả.</li>
+                                </ul>
+                            </div>
+                            <div class="rules-column highlight-column">
+                                <h5>✨ Quy tắc mới vừa học được từ kết quả tuần (Learned Rules):</h5>
+                                <ul id="learnedBrandRulesList" class="rules-list highlight-list">
+                                    <li>Ưu tiên Hook dạng mâu thuẫn nhận thức hoặc góc nhìn trải nghiệm thực tế trong 3 giây đầu để tối ưu Retention.</li>
+                                    <li>Kèm CTA cụ thể hướng dẫn độc giả bình luận để kích hoạt Agent 15 tự động phản hồi quà tặng.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab 3: Liên kết xuất bản đa kênh -->
+                    <div class="analytics-pane" id="pane-an-links">
+                        <div class="publish-notice-banner">
+                            <span class="notice-icon">ℹ️</span>
+                            <div>
+                                <h4>GIẢI THÍCH VỀ ĐƯỜNG LINK XUẤT BẢN ĐA NỀN TẢNG:</h4>
+                                <p>Hệ thống hiện tại đang tạo ra <strong>URL Định danh Chuẩn (Canonical Sandbox Links)</strong> để hoàn thiện luồng dữ liệu tự động mà không bắt buộc người dùng phải cung cấp tài khoản cá nhân. Vì là môi trường kiểm thử nội bộ (chưa nối API Key Fanpage thật), khi nhấp vào link trình duyệt sẽ báo <em>trang không tồn tại (404)</em>.</p>
+                            </div>
+                        </div>
+
+                        <div class="published-links-grid" id="publishedLinksContainer">
+                            <!-- Sẽ được render động từ workflowState -->
+                        </div>
+
+                        <div class="api-integration-guide">
+                            <h5>🔌 Hướng dẫn kết nối xuất bản lên Fanpage / Kênh mạng xã hội thật:</h5>
+                            <p>Khi bạn sẵn sàng triển khai thực tế trên Fanpage cá nhân hoặc doanh nghiệp, chỉ cần điền cấu hình API trong <code>agents/operations/publisher_agent.py</code>:</p>
+                            <ul>
+                                <li><strong>Meta (Facebook / Instagram / Threads):</strong> Điền Page Access Token thông qua Meta Graph API.</li>
+                                <li><strong>TikTok:</strong> Sử dụng TikTok Content Posting API dành cho Developers.</li>
+                                <li><strong>Ayrshare / Buffer:</strong> Cấu hình <code>AYRSHARE_API_KEY</code> để tự động đăng lên toàn bộ 4 nền tảng cùng lúc bằng 1 API duy nhất.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-ghost" onclick="closeModal('modalAnalyticsReport')">Đóng báo cáo</button>
+                <button class="btn-primary" onclick="copyPublishedSummary()">📋 Sao chép tóm tắt kết quả bài viết</button>
             </div>
         </div>
     </div>

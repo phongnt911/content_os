@@ -211,3 +211,29 @@ flowchart TD
     comment_mgr --> analytics[analytics_learner]
     analytics --> END2([END])
 ```
+
+---
+
+## 7. ĐẶC TẢ TẦNG OPERATIONS & KẾT QUẢ ĐẦU RA (OPERATIONS LAYER SPEC)
+
+### 7.1. Agent 14: Publisher Agent & Multi-Channel Service Architecture
+- **Trách nhiệm:** Xuất bản đồng bộ gói nội dung đã duyệt lên 4 kênh (Facebook Post, TikTok Video 9:16, Threads Series, YouTube Shorts).
+- **Mô hình kiến trúc (Clean Architecture):** Tách biệt logic nghiệp vụ qua `PublisherService` interface trừu tượng:
+  - `DefaultPublisherService`: Cơ chế Sandbox sinh Canonical Mock URLs định danh duy nhất (`https://facebook.com/pota/posts/{hash}`) phục vụ kiểm thử nội bộ tự động và CI/CD.
+  - `ProductionPublisherService` (Sẵn sàng tích hợp API thực tế): Nhận `PAGE_ACCESS_TOKEN` (Meta Graph API) hoặc `AYRSHARE_API_KEY` để đăng trực tiếp lên Fanpage/Kênh thật.
+
+### 7.2. Agent 15: Community & Comment Manager
+- **Trách nhiệm:** Tạo kịch bản auto-reply và seeding thảo luận cộng đồng bám sát lời kêu gọi hành động (CTA) của bài viết, tối ưu hóa tỷ lệ chuyển đổi Leads.
+
+### 7.3. Agent 16: Analytics & "Brand Brain" Continuous Learner
+- **Trách nhiệm:** Tổng hợp và đánh giá chỉ số tương tác tuần (Reach, Views, Retention, CTA Comments, Leads) và nhận diện các góc tiếp cận thành công (Winning Angles).
+- **Cơ chế tự học (Brand Brain Self-Evolution):**
+  - Trích xuất 1-2 bài học thực chiến súc tích thành các quy tắc mới (`learned_rules`).
+  - Nạp tự động vào trường `brand_rules` trong `ContentOSState` thông qua reducer `Annotated[List[str], operator.add]`.
+  - Bộ quy tắc tích lũy này tự động truyền vào chu kỳ sản xuất tuần kế tiếp, giúp hệ thống ngày càng thấu hiểu sở thích khán giả mà không cần cấu hình lại thủ công.
+
+### 7.4. Giao diện trực quan hóa Báo cáo (Visual Dashboard Integration)
+- Modal **"BÁO CÁO ĐO LƯỜNG HIỆU QUẢ TUẦN & BRAND BRAIN"** (`#modalAnalyticsReport`) trên Web UI:
+  - Tự động kích hoạt khi đồ thị hoàn thành Chặng 5 (Agent 16 kết thúc).
+  - Cho phép người dùng truy cập mọi lúc bằng cách click vào node `Agent 16: Phân tích` hoặc `Brand Brain tự cập nhật` trên sơ đồ luồng.
+  - Cung cấp tính năng sao chép toàn bộ ấn phẩm và liên kết ra Clipboard với 1 nút bấm (`copyPublishedSummary()`).
