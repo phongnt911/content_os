@@ -220,6 +220,60 @@ class MockStructuredRunnable:
                 cover_headline="Bí mật tự động hóa nội dung đa kênh",
                 last_slide_cta="Lưu lại bài viết nếu bạn thấy hữu ích!",
             )
+        elif schema_name == "VideoScriptResult":
+            from core.state import VideoSceneItem
+            return self.schema(
+                total_estimated_duration=45,
+                hook_opening="Bạn vẫn đang mất 6 tiếng để quay và dựng một video ngắn?",
+                scenes=[
+                    VideoSceneItem(
+                        scene_number=1,
+                        duration_seconds=5,
+                        visual_cue="Creator nhìn thẳng vào camera, biểu cảm ngạc nhiên cầm điện thoại",
+                        voice_prompter="Dừng việc thức đêm mò mẫm cắt từng khung hình video lại ngay.",
+                    ),
+                    VideoSceneItem(
+                        scene_number=2,
+                        duration_seconds=15,
+                        visual_cue="Màn hình hiển thị giao diện tự động nhận diện giọng nói và phụ đề",
+                        voice_prompter="Hôm nay tôi sẽ chỉ cho bạn cách 1 AI Agent tự động cắt khoảng lặng và chèn sub.",
+                    ),
+                    VideoSceneItem(
+                        scene_number=3,
+                        duration_seconds=15,
+                        visual_cue="B-roll timeline dựng video tự chạy chèn B-roll và sound effect",
+                        voice_prompter="Chỉ cần nạp video thô, toàn bộ B-roll và hiệu ứng được căn chỉnh chính xác từng giây.",
+                    ),
+                    VideoSceneItem(
+                        scene_number=4,
+                        duration_seconds=10,
+                        visual_cue="Creator chỉ tay xuống phần bình luận, xuất hiện logo LinTech",
+                        voice_prompter="Comment VIDEO để nhận quy trình thiết lập miễn phí ngay hôm nay.",
+                    ),
+                ],
+                cta_closing="Comment VIDEO để nhận workflow hoàn chỉnh!",
+            )
+        elif schema_name == "VideoReviewResult":
+            return self.schema(
+                video_approved=True,
+                measured_duration=45,
+                subtitle_synced=True,
+                technical_feedback="Thời lượng 45s đạt chuẩn < 60s, phụ đề khớp khẩu hình, âm thanh cân bằng.",
+            )
+        elif schema_name == "CoverPromptResult":
+            return self.schema(
+                prompt_3_4="Minimalist modern tech workspace, glowing AI neon nodes, professional creator desk, 3:4 aspect ratio, high resolution",
+                prompt_9_16="Cyberpunk aesthetic creator studio, vertical smartphone layout, dynamic lighting, 9:16 aspect ratio, 8k render",
+                overlay_headline="AI DỰNG VIDEO TRONG 30 GIÂY",
+                safe_zone_notes="Tiêu đề căn chính giữa, cách viền dưới 25% để không bị che bởi thanh công cụ TikTok/Reels.",
+            )
+        elif schema_name == "ImageReviewResult":
+            return self.schema(
+                image_approved=True,
+                brand_guidelines_met=True,
+                safe_zone_valid=True,
+                feedback="Ảnh bìa nổi bật, font chữ dễ đọc, màu sắc chuẩn Brand Voice LinTech.",
+            )
 
         # Fallback cho schema khác
         try:

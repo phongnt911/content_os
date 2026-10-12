@@ -121,10 +121,13 @@ def test_full_text_pipeline_in_graph():
     snapshot = app.get_state(thread_config)
     assert "human_approve_plan" in snapshot.next
 
-    # 2. User duyệt kế hoạch -> Kích hoạt toàn bộ Text Pipeline
+    # 2. User duyệt kế hoạch -> Nhánh Text chạy và nhánh Media dừng tại Human Touchpoint 2
     app.invoke(Command(resume={"approved": True}), config=thread_config)
+    mid_snapshot = app.get_state(thread_config)
+    assert "human_record_video" in mid_snapshot.next
 
-    # 3. Kiểm tra kết quả hội tụ
+    # 3. User cung cấp footage video để hội tụ hoàn toàn
+    app.invoke(Command(resume={"raw_footage_url": "https://test.video/clip.mp4"}), config=thread_config)
     final_snapshot = app.get_state(thread_config)
     assert len(final_snapshot.next) == 0  # Đã chạy tới END thành công
 

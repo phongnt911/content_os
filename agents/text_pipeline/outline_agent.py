@@ -78,5 +78,4 @@ def outline_node(state: ContentOSState) -> Dict[str, Any]:
 
     return {
         "outline": outline_result.model_dump(),
-        "selected_topic": selected_topic,
     }

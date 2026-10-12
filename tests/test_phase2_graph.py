@@ -80,9 +80,14 @@ def test_graph_resumes_on_approved(initial_state: ContentOSState):
 
     # 2. User duyệt kế hoạch
     resume_command = Command(resume={"approved": True, "note": "Kế hoạch tuần rất tốt!"})
-    final_output = app.invoke(resume_command, config=thread_config)
+    app.invoke(resume_command, config=thread_config)
 
-    # 3. Kiểm tra kết quả sau khi hoàn thành
+    # 3. Kiểm tra: Nhánh Media dừng tại Human Touchpoint 2 (quay video)
+    mid_snapshot = app.get_state(thread_config)
+    assert "human_record_video" in mid_snapshot.next
+
+    # 4. Cung cấp Touchpoint 2 để đồ thị chạy tới hoàn tất
+    app.invoke(Command(resume={"raw_footage_url": "https://drive.google.com/test_clip"}), config=thread_config)
     final_snapshot = app.get_state(thread_config)
     assert len(final_snapshot.next) == 0  # Đã kết thúc chu trình
 
