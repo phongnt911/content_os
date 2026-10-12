@@ -143,4 +143,77 @@ class ContentOSState(TypedDict):
 ### Tầng 5: Đo lường & Vòng học tuần (Analytics & Brain Updating)
 - **Agent 16 (Phân tích & Tối ưu):** Sau 7 ngày, tổng hợp chỉ số tương tác, xác định góc bài viết (Angle) chiến thắng, tự động rút ra các bài học mới và bổ sung vào `brand_rules` trong State để chu kỳ tuần sau thông minh hơn.
 
+---
+
+## 5. GRAPH ROUTING & CONDITIONAL EDGES SPECIFICATION
+
+### Luồng điều hướng tổng quát:
+- `START` -> `research` -> `plan` -> `human_approve_plan`
+
+### Các nút điều kiện & Rẽ nhánh:
+1. **`human_approve_plan` (Conditional Edge):**
+   - Nếu `plan_approved == True`: Fork song song thành 2 nhánh `[outline, video_script]`.
+   - Nếu `False`: Chuyển tới `END`.
+
+2. **Dây chuyền Chữ (Text Pipeline):**
+   - `outline` -> `writer` -> `review_text`
+   - **`review_text` (Conditional Edge):**
+     - Nếu `draft_score < 8` VÀ `text_revision_count < 2`: Vòng lặp quay lại `writer`.
+     - Ngược lại (`draft_score >= 8` HOẶC `text_revision_count >= 2`): Sang `fact_check` -> `repurpose_threads` -> `carousel` -> `join_node`.
+
+3. **Dây chuyền Video & Ảnh (Visual Pipeline):**
+   - `video_script` -> `human_record_video` -> `video_editing` -> `review_video`
+   - **`review_video` (Conditional Edge):**
+     - Nếu lỗi VÀ `video_revision_count < 1`: Quay lại `video_editing`.
+     - Ngược lại (`video_approved == True` HOẶC `video_revision_count >= 1`): Sang `cover_image` -> `review_image` -> `join_node`.
+
+4. **Hội tụ & Phê duyệt xuất bản:**
+   - `join_node` (Hội tụ 2 nhánh Text & Visual) -> `human_approve_final_package`.
+   - **`human_approve_final_package` (Conditional Edge):**
+     - Nếu `final_package_approved == True`: Sang `publisher` -> `comment_manager` -> `analytics_learner` -> `END`.
+     - Nếu cần sửa: Quay về nhánh tương ứng dựa trên `user_revision_note` (Text Pipeline hoặc Visual Pipeline) với điều kiện `total_cycle_count <= 4`.
+     - Nếu `total_cycle_count > 4`: Chuyển sang trạng thái `HALTED` / `END`.
+
+```mermaid
+flowchart TD
+    START([START]) --> research[Agent 1: Research]
+    research --> plan[Agent 2: Plan]
+    plan --> human_plan{Human Touchpoint 1: Duyệt Plan}
+    
+    human_plan -- "Rejected" --> END1([END])
+    human_plan -- "Approved (Fork)" --> outline[Agent 3: Outline]
+    human_plan -- "Approved (Fork)" --> video_script[Agent 9: Video Script]
+    
+    subgraph Text_Pipeline [Dây chuyền Chữ]
+        outline --> writer[Agent 4: Writer]
+        writer --> review_text{Agent 5: Review Text}
+        review_text -- "Score < 8 & Rev < 2" --> writer
+        review_text -- "Pass" --> fact_check[Agent 6: Fact Check]
+        fact_check --> repurpose[Agent 7: Repurpose Threads]
+        repurpose --> carousel[Agent 8: Carousel]
+    end
+    
+    subgraph Visual_Pipeline [Dây chuyền Video & Ảnh]
+        video_script --> human_record{Human Touchpoint 2: Quay Raw}
+        human_record --> video_edit[Agent 10: Video Editor]
+        video_edit --> review_video{Agent 11: Review Video}
+        review_video -- "Error & Rev < 1" --> video_edit
+        review_video -- "Pass" --> cover[Agent 12: Cover Image]
+        cover --> review_image[Agent 13: Review Image]
+    end
+    
+    carousel --> join_node[Join Node]
+    review_image --> join_node
+    
+    join_node --> human_final{Human Touchpoint 3: Duyệt Trọn Bộ}
+    human_final -- "Approved" --> publisher[Agent 14: Publisher]
+    human_final -- "Revise (Cycle <= 4)" --> outline
+    human_final -- "Cycle > 4" --> HALTED([HALTED / END])
+    
+    publisher --> comment_mgr[Agent 15: Comment Manager]
+    comment_mgr --> analytics[Agent 16: Analytics & Learner]
+    analytics --> END2([END])
+```
+
+
 
