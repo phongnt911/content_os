@@ -1,0 +1,25 @@
+# Môi trường ảo & Python cache
+venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# File bảo mật API keys
+.env
+*.env.local
+
+# Thư mục dữ liệu & runtime LangGraph
+.langgraph_api/
+*.sqlite
+*.db
+downloads/
+temp_media/
+output_media/
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
