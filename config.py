@@ -274,6 +274,52 @@ class MockStructuredRunnable:
                 safe_zone_valid=True,
                 feedback="Ảnh bìa nổi bật, font chữ dễ đọc, màu sắc chuẩn Brand Voice LinTech.",
             )
+        elif schema_name == "CommunityStrategyResult":
+            from core.state import CommentReplyItem
+            return self.schema(
+                target_cta_keyword="WORKFLOW",
+                lead_magnet_url="https://lintech.vn/resources/agentic-content-os",
+                seeding_comments=[
+                    "Theo anh em thì công đoạn nào trong chuỗi 16 agent này tạo ra nút thắt lớn nhất?",
+                    "Bài viết chia sẻ rất thực chiến, mình đã áp dụng và tiết kiệm được 80% thời gian lên bài.",
+                ],
+                faq_replies=[
+                    CommentReplyItem(
+                        intent="Hỏi tài liệu",
+                        sample_comment="Bác cho em xin tài liệu workflow với ạ!",
+                        reply_template="Cảm ơn bạn! Mình đã gửi tài liệu chi tiết qua link: https://lintech.vn/resources/agentic-content-os. Chúc bạn ứng dụng thành công!",
+                    ),
+                    CommentReplyItem(
+                        intent="Thắc mắc chi phí & API",
+                        sample_comment="Dùng 16 agent thế này chi phí token có bị cao không bác?",
+                        reply_template="Hệ thống đã có cơ chế Loop Breaker tối đa 2 lần sửa bài và dùng model fast cho các tác vụ phân loại, chi phí trung bình chỉ dưới 0.05$ cho trọn gói bài viết đa kênh bạn nhé!",
+                    ),
+                ],
+            )
+        elif schema_name == "CommentReplyResult":
+            return self.schema(
+                matched_cta="WORKFLOW",
+                sentiment="Tích cực",
+                auto_reply_text="Đã gửi tài liệu vào hòm thư của bạn! Khám phá thêm tại https://lintech.vn/resources/agentic-content-os.",
+            )
+        elif schema_name == "AnalyticsReportResult":
+            return self.schema(
+                winning_angles=[
+                    "Góc tiếp cận: Thực chiến so sánh trước và sau khi tự động hóa quy trình",
+                    "Góc phân tích nghịch lý: Đừng cố viết chăm chỉ hơn mà hãy xây dựng hệ thống agent",
+                ],
+                learned_rules=[
+                    "Quy tắc Brand Voice mới: Luôn kèm số liệu định lượng (tiết kiệm 80% thời gian) trong 3 dòng đầu tiên.",
+                    "Quy tắc Video: Đặt chữ thumbnail to rõ chiếm tối thiểu 1/3 khung hình 9:16 để tối ưu click-through-rate.",
+                ],
+                metrics_summary={
+                    "total_impressions": 145000,
+                    "engagement_rate": "8.4%",
+                    "shares_count": 890,
+                    "comments_count": 420,
+                    "leads_generated": 185,
+                },
+            )
 
         # Fallback cho schema khác
         try:

@@ -149,8 +149,23 @@ class PublishResult(BaseModel):
     published_status: str = Field(description="Trạng thái xuất bản (e.g., 'SUCCESS', 'PARTIAL')")
 
 
-class CommentReplyResult(BaseModel):
+class CommentReplyItem(BaseModel):
+    """Phản hồi chi tiết cho từng loại ý định của độc giả."""
+    intent: str = Field(description="Ý định bình luận (Hỏi tài liệu, thảo luận chuyên môn, phản biện)")
+    sample_comment: str = Field(description="Bình luận giả lập của người theo dõi")
+    reply_template: str = Field(description="Câu trả lời phản hồi chuẩn giọng điệu LinTech kèm CTA")
+
+
+class CommunityStrategyResult(BaseModel):
     """Đầu ra có cấu trúc của Agent 15 (Community Manager)."""
+    target_cta_keyword: str = Field(description="Từ khóa CTA kích hoạt (e.g., 'WORKFLOW', 'AGENTIC_AI')")
+    lead_magnet_url: str = Field(description="Đường link tài liệu hoặc quà tặng chuyển đổi")
+    seeding_comments: List[str] = Field(min_length=2, description="Danh sách bình luận gieo mầm kích hoạt tương tác")
+    faq_replies: List[CommentReplyItem] = Field(min_length=2, description="Kịch bản phản hồi mẫu theo từng ý định")
+
+
+class CommentReplyResult(BaseModel):
+    """Đầu ra có cấu trúc phản hồi đơn lẻ của Agent 15."""
     matched_cta: str = Field(description="Từ khóa CTA mà độc giả đã comment")
     sentiment: str = Field(description="Sắc thái: Tích cực, Tiêu cực, Hỏi mua, Góp ý")
     auto_reply_text: str = Field(description="Câu trả lời tự động chuẩn phong cách thương hiệu")

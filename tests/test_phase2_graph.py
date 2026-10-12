@@ -86,8 +86,13 @@ def test_graph_resumes_on_approved(initial_state: ContentOSState):
     mid_snapshot = app.get_state(thread_config)
     assert "human_record_video" in mid_snapshot.next
 
-    # 4. Cung cấp Touchpoint 2 để đồ thị chạy tới hoàn tất
+    # 4. Cung cấp Touchpoint 2 -> Hai nhánh hội tụ và dừng tại Touchpoint 3 (Duyệt trọn gói)
     app.invoke(Command(resume={"raw_footage_url": "https://drive.google.com/test_clip"}), config=thread_config)
+    tp3_snapshot = app.get_state(thread_config)
+    assert "human_approve_final_package" in tp3_snapshot.next
+
+    # 5. User duyệt trọn bộ tại Touchpoint 3 để hoàn tất chu trình
+    app.invoke(Command(resume={"approved": True}), config=thread_config)
     final_snapshot = app.get_state(thread_config)
     assert len(final_snapshot.next) == 0  # Đã kết thúc chu trình
 

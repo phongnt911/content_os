@@ -54,3 +54,28 @@ def route_after_video_review(state: ContentOSState) -> str:
     if not is_approved and revision_count < 1:
         return "video_editing"
     return "generate_cover_image"
+
+
+def route_after_final_approval(state: ContentOSState) -> str:
+    """Conditional Edge sau Human Touchpoint 3 (Duyệt trọn gói Final Package).
+    
+    Quy tắc:
+    - Nếu final_package_approved == True: Tiến hành xuất bản ('publisher').
+    - Nếu total_cycle_count > 4: Chuyển sang trạng thái dừng khẩn cấp HALTED (END).
+    - Nếu cần sửa (total_cycle_count <= 4):
+      + Nếu ghi chú sửa video/ảnh: Quay lại 'generate_video_script'.
+      + Mặc định: Quay lại 'generate_outline' để sửa lại nội dung chữ.
+    """
+    if state.get("final_package_approved", False):
+        return "publisher"
+
+    cycle_count = state.get("total_cycle_count", 0)
+    if cycle_count > 4:
+        return END
+
+    note = (state.get("user_revision_note") or "").lower()
+    media_keywords = ["video", "clip", "dựng", "sub", "audio", "nhạc", "cover", "ảnh"]
+    if any(kw in note for kw in media_keywords):
+        return "generate_video_script"
+
+    return "generate_outline"

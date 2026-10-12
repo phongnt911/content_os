@@ -104,9 +104,67 @@ def human_record_video_node(state: ContentOSState) -> Dict[str, Any]:
     }
 
 
+# Convergence Node
 def join_node(state: ContentOSState) -> Dict[str, Any]:
     """Node hội tụ dữ liệu của 2 nhánh Text Pipeline & Visual Pipeline."""
     current_cycles = state.get("total_cycle_count", 0)
     return {
         "total_cycle_count": current_cycles + 1
     }
+
+
+def human_approve_final_package_node(state: ContentOSState) -> Dict[str, Any]:
+    """Human Touchpoint 3: Duyệt Trọn Gói Giao Phẩm Trước Khi Xuất Bản.
+    
+    Tạm dừng luồng bằng interrupt(), hiển thị đầy đủ payload gói nội dung:
+    - Bài viết Facebook hoàn thiện
+    - Chuỗi bài Threads
+    - Slide Carousel
+    - Link Video Render kèm thời lượng
+    - Link Ảnh Bìa Cover
+    - Số chu kỳ đã lặp (total_cycle_count)
+    
+    User gửi quyết định qua Command(resume={"approved": True/False, "note": "...", "revision_target": "text"|"video"}).
+    """
+    total_cycle_count = state.get("total_cycle_count", 1)
+
+    preview_payload = {
+        "touchpoint": 3,
+        "action": "human_approve_final_package",
+        "cycle_count": total_cycle_count,
+        "max_cycles_allowed": 4,
+        "topic": state.get("selected_topic", {}),
+        "text_draft": state.get("fact_checked_draft") or state.get("raw_draft", ""),
+        "threads_posts": state.get("threads_posts", []),
+        "carousel_slides_count": len(state.get("carousel_slides", [])),
+        "rendered_video_url": state.get("rendered_video_url"),
+        "video_duration_seconds": state.get("video_duration", 0),
+        "cover_image_url": state.get("cover_image_url"),
+        "instruction": "Xem xét toàn bộ gói nội dung. Phê duyệt xuất bản (approved=True) hoặc yêu cầu chỉnh sửa (approved=False kèm note).",
+    }
+
+    user_response = interrupt(preview_payload)
+
+    if isinstance(user_response, dict):
+        is_approved = bool(user_response.get("approved", False))
+        revision_note = user_response.get("note")
+    elif isinstance(user_response, bool):
+        is_approved = user_response
+        revision_note = None
+    else:
+        is_approved = False
+        revision_note = str(user_response)
+
+    updates: Dict[str, Any] = {
+        "final_package_approved": is_approved,
+    }
+    if revision_note is not None:
+        updates["user_revision_note"] = revision_note
+
+    return updates
+
+
+# Operations Layer Nodes
+from agents.operations.publisher_agent import publisher_node
+from agents.operations.community_agent import community_node
+from agents.operations.analytics_agent import analytics_node

@@ -139,7 +139,12 @@ def test_full_dag_fork_join_workflow():
     user_footage = "https://drive.google.com/file/d/creator_raw_clip_1080p/view"
     app.invoke(Command(resume={"raw_footage_url": user_footage}), config=thread_config)
 
-    # 4. Kiểm tra đồ thị hoàn thành cả 2 nhánh và hội tụ tại join_node
+    # 4. Kiểm tra đồ thị hoàn thành cả 2 nhánh và hội tụ tại Touchpoint 3 (Duyệt trọn gói)
+    tp3_snapshot = app.get_state(thread_config)
+    assert "human_approve_final_package" in tp3_snapshot.next
+
+    # 5. User duyệt trọn gói -> Hoàn tất toàn bộ chu trình
+    app.invoke(Command(resume={"approved": True}), config=thread_config)
     final_snapshot = app.get_state(thread_config)
     assert len(final_snapshot.next) == 0  # Đã hoàn tất luồng
 
